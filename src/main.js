@@ -153,14 +153,18 @@ function setupFileHandling() {
 
 async function handleFileSelect(file) {
   inputFileName = file.name;
-  inputFilePath = file.path || file.name;
+  // Get absolute path: use file.path if available (Tauri), otherwise construct from file
+  inputFilePath = file.path || file.webkitRelativePath || file.name;
 
+  // In web mode, if we only have filename, try to use it as-is
+  // In Tauri mode, we'll get a full path from file.path
   $('inputPath').value = inputFilePath;
 
   // Auto-set output path (same location, same name)
   const baseName = file.name.replace(/\.[^/.]+$/, '');
   const dir = inputFilePath.substring(0, inputFilePath.lastIndexOf('/') + 1);
-  $('outputPath').value = dir + baseName;
+  const absoluteOutputPath = dir + baseName;
+  $('outputPath').value = absoluteOutputPath;
 
   // Read file content for mermaid detection
   try {
@@ -304,8 +308,12 @@ function buildPandocCommand() {
   const format = $('outputFormat').value;
   args.push(`-t ${format}`);
 
-  // Output file
-  const outputPath = $('outputPath').value || 'output';
+  // Output file (use absolute path if available)
+  let outputPath = $('outputPath').value || 'output';
+  // Expand ~ to home directory for absolute paths
+  if (outputPath.startsWith('~')) {
+    outputPath = outputPath.replace('~', (process.env.HOME || '/Users/ivg'));
+  }
   const ext = getExtensionForFormat(format);
   const finalOutput = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
   args.push(`-o "${finalOutput}"`);
@@ -373,7 +381,7 @@ function buildPandocCommand() {
     const needsLastPage = [headerL, headerC, headerR, footerL, footerC, footerR].some(s => s && s.includes('LastPage'));
 
     if (hasHeader || hasFooter) {
-      let includes = '\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}';
+      let includes = '\\\\usepackage{microtype}\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}';
       if (needsLastPage) includes += '\\\\usepackage{lastpage}';
       args.push(`-V header-includes="${includes}"`);
       if (headerL) args.push(`-V header-includes="\\\\lhead{${headerL}}"`);
@@ -394,11 +402,11 @@ function buildPandocCommand() {
       switch (pageFormat) {
         case 'page-of':
           pageNum = 'Page \\\\thepage\\\\ of \\\\pageref{LastPage}';
-          args.push('-V header-includes="\\\\usepackage{lastpage}"');
+          args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{lastpage}"');
           break;
         case 'number-of':
           pageNum = '\\\\thepage\\\\ / \\\\pageref{LastPage}';
-          args.push('-V header-includes="\\\\usepackage{lastpage}"');
+          args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{lastpage}"');
           break;
         case 'number':
           pageNum = '\\\\thepage';
@@ -408,7 +416,7 @@ function buildPandocCommand() {
       }
 
       if (pagePos !== 'bottom-center') {
-        args.push('-V header-includes="\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}"');
+        args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}"');
         if (pagePos === 'bottom-right') {
           args.push(`-V header-includes="\\\\rfoot{${pageNum}}"`);
         } else if (pagePos === 'top-right') {
