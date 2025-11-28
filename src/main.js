@@ -64,47 +64,25 @@ function toggleTheme() {
   updateCommandPreview();
 }
 
-// System Fonts - populate from common list, check availability
+// System Fonts - populate all common fonts (pandoc/LaTeX will use what's available)
 function loadSystemFonts() {
   const mainFontSelect = $('mainFont');
   const monoFontSelect = $('monoFont');
 
-  // Test font availability using canvas
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const testString = 'mmmmmmmmmmlli';
-  const testSize = '72px';
-  const baselineFont = 'monospace';
-
-  ctx.font = `${testSize} ${baselineFont}`;
-  const baselineWidth = ctx.measureText(testString).width;
-
-  function isFontAvailable(font) {
-    ctx.font = `${testSize} "${font}", ${baselineFont}`;
-    return ctx.measureText(testString).width !== baselineWidth;
-  }
-
-  // Populate main fonts
-  const availableFonts = commonFonts.filter(isFontAvailable).sort();
-  availableFonts.forEach(font => {
+  // Just add all fonts - pandoc will use what's installed on the system
+  commonFonts.sort().forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
-    opt.style.fontFamily = font;
     mainFontSelect.appendChild(opt);
   });
 
-  // Populate mono fonts
-  const availableMonoFonts = monoFonts.filter(isFontAvailable).sort();
-  availableMonoFonts.forEach(font => {
+  monoFonts.sort().forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
-    opt.style.fontFamily = font;
     monoFontSelect.appendChild(opt);
   });
-
-  console.log(`Loaded ${availableFonts.length} main fonts, ${availableMonoFonts.length} mono fonts`);
 }
 
 // File Handling
@@ -397,8 +375,9 @@ function buildPandocCommand() {
     if ($('colorLinks').checked) {
       args.push('-V colorlinks=true');
       const color = $('linkColor').value.replace('#', '');
-      args.push(`-V linkcolor=[HTML]{${color}}`);
-      args.push(`-V urlcolor=[HTML]{${color}}`);
+      // Quote the [HTML] to prevent zsh glob interpretation
+      args.push(`-V 'linkcolor=[HTML]{${color}}'`);
+      args.push(`-V 'urlcolor=[HTML]{${color}}'`);
     }
   }
 
