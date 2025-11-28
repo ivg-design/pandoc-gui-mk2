@@ -7,19 +7,19 @@ let inputFileContent = null;
 let systemFonts = [];
 let monoFonts = [];
 
-// Code theme colors for preview
+// Code theme colors for preview (kw=keyword, fn=function, st=string, cm=comment)
 const themeColors = {
-  'pygments': { bg: '#f8f8f8', kw: '#008000', fn: '#0000ff', st: '#ba2121' },
-  'kate': { bg: '#ffffff', kw: '#1f1c1b', fn: '#644a9b', st: '#bf0303' },
-  'tango': { bg: '#f8f8f8', kw: '#204a87', fn: '#000000', st: '#4e9a06' },
-  'espresso': { bg: '#2a211c', kw: '#43a8ed', fn: '#ff9d00', st: '#049b0a' },
-  'breezedark': { bg: '#232629', kw: '#cfcfc2', fn: '#8e44ad', st: '#f44f4f' },
-  'zenburn': { bg: '#3f3f3f', kw: '#f0dfaf', fn: '#efef8f', st: '#cc9393' },
-  'nord': { bg: '#2e3440', kw: '#81a1c1', fn: '#88c0d0', st: '#a3be8c' },
-  'dracula': { bg: '#282a36', kw: '#ff79c6', fn: '#50fa7b', st: '#f1fa8c' },
-  'monokai': { bg: '#272822', kw: '#f92672', fn: '#a6e22e', st: '#e6db74' },
-  'gruvbox-dark': { bg: '#282828', kw: '#fb4934', fn: '#b8bb26', st: '#fabd2f' },
-  'solarized-dark': { bg: '#002b36', kw: '#859900', fn: '#268bd2', st: '#2aa198' },
+  'pygments': { bg: '#f8f8f8', kw: '#008000', fn: '#0000ff', st: '#ba2121', cm: '#408080' },
+  'kate': { bg: '#ffffff', kw: '#1f1c1b', fn: '#644a9b', st: '#bf0303', cm: '#898887' },
+  'tango': { bg: '#f8f8f8', kw: '#204a87', fn: '#000000', st: '#4e9a06', cm: '#8f5902' },
+  'espresso': { bg: '#2a211c', kw: '#43a8ed', fn: '#ff9d00', st: '#049b0a', cm: '#7c7c7c' },
+  'breezedark': { bg: '#232629', kw: '#cfcfc2', fn: '#8e44ad', st: '#f44f4f', cm: '#7a7c7d' },
+  'zenburn': { bg: '#3f3f3f', kw: '#f0dfaf', fn: '#efef8f', st: '#cc9393', cm: '#7f9f7f' },
+  'nord': { bg: '#2e3440', kw: '#81a1c1', fn: '#88c0d0', st: '#a3be8c', cm: '#616e88' },
+  'dracula': { bg: '#282a36', kw: '#ff79c6', fn: '#50fa7b', st: '#f1fa8c', cm: '#6272a4' },
+  'monokai': { bg: '#272822', kw: '#f92672', fn: '#a6e22e', st: '#e6db74', cm: '#75715e' },
+  'gruvbox-dark': { bg: '#282828', kw: '#fb4934', fn: '#b8bb26', st: '#fabd2f', cm: '#928374' },
+  'solarized-dark': { bg: '#002b36', kw: '#859900', fn: '#268bd2', st: '#2aa198', cm: '#586e75' },
 };
 
 // DOM Elements
@@ -179,6 +179,10 @@ function updateCodePreview() {
   preview.querySelectorAll('.kw').forEach(el => el.style.color = colors.kw);
   preview.querySelectorAll('.fn').forEach(el => el.style.color = colors.fn);
   preview.querySelectorAll('.st').forEach(el => el.style.color = colors.st);
+  preview.querySelectorAll('.cm').forEach(el => {
+    el.style.color = colors.cm;
+    el.style.fontStyle = 'italic';
+  });
 
   // Set text color based on background brightness
   const isLightTheme = ['pygments', 'kate', 'tango'].includes(theme);
