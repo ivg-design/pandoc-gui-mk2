@@ -122,42 +122,42 @@
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="titlePage" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Title Page</span>
-            <div class="tooltip tooltip-bottom" data-tip="Generate a separate title page with title, author, and date centered">
+            <div class="tooltip tooltip-end" data-tip="Generate a separate title page with title, author, and date centered">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="toc" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Table of Contents</span>
-            <div class="tooltip tooltip-right" data-tip="Auto-generate a clickable table of contents from your headings">
+            <div class="tooltip tooltip-end" data-tip="Auto-generate a clickable table of contents from your headings">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="lof" class="checkbox checkbox-xs">
             <span class="label-text text-xs">List of Figures</span>
-            <div class="tooltip tooltip-right" data-tip="Generate a list of all figures with page numbers">
+            <div class="tooltip tooltip-end" data-tip="Generate a list of all figures with page numbers">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="lot" class="checkbox checkbox-xs">
             <span class="label-text text-xs">List of Tables</span>
-            <div class="tooltip tooltip-right" data-tip="Generate a list of all tables with page numbers">
+            <div class="tooltip tooltip-end" data-tip="Generate a list of all tables with page numbers">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="numberSections" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Number Sections</span>
-            <div class="tooltip tooltip-right" data-tip="Add numbers to headings: 1. Intro, 1.1 Background, 2. Methods...">
+            <div class="tooltip tooltip-end" data-tip="Add numbers to headings: 1. Intro, 1.1 Background, 2. Methods...">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
           <label id="standaloneLabel" class="label py-1 cursor-pointer justify-start gap-2 hidden">
             <input type="checkbox" id="standalone" class="checkbox checkbox-xs" checked>
             <span class="label-text text-xs">Standalone</span>
-            <div class="tooltip tooltip-right" data-tip="Create complete HTML file with doctype. Disable for fragment to embed elsewhere.">
+            <div class="tooltip tooltip-end" data-tip="Create complete HTML file with doctype. Disable for fragment to embed elsewhere.">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </label>
@@ -178,7 +178,7 @@
         <div class="form-control" id="topLevelDivSection">
           <div class="flex items-center gap-2">
             <span class="label-text text-xs">Top-level headings are:</span>
-            <div class="tooltip tooltip-right" data-tip="What H1 becomes: Chapter (with page breaks), Section (no breaks), Part (major divisions)">
+            <div class="tooltip tooltip-end" data-tip="What H1 becomes: Chapter (with page breaks), Section (no breaks), Part (major divisions)">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </div>
@@ -486,7 +486,7 @@
         <div class="form-control" id="docClassSection">
           <div class="flex items-center gap-1">
             <label class="label py-0"><span class="label-text text-xs">Document Class</span></label>
-            <div class="tooltip tooltip-right" data-tip="LaTeX document classes define the overall layout: article (short docs), report (longer with chapters), book (two-sided printing), memoir (flexible), KOMA classes (European typography)">
+            <div class="tooltip tooltip-end" data-tip="LaTeX document classes define the overall layout: article (short docs), report (longer with chapters), book (two-sided printing), memoir (flexible), KOMA classes (European typography)">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </div>
@@ -506,14 +506,14 @@
             <label class="label py-0 cursor-pointer justify-start gap-1">
               <input type="checkbox" id="filterCrossref" class="checkbox checkbox-xs">
               <span class="label-text text-xs">pandoc-crossref</span>
-              <div class="tooltip tooltip-right" data-tip="Enables cross-references: @fig:name for figures, @eq:name for equations, @sec:name for sections. Use {#fig:name} to label items.">
+              <div class="tooltip tooltip-end" data-tip="Enables cross-references: @fig:name for figures, @eq:name for equations, @sec:name for sections. Use {#fig:name} to label items.">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
             </label>
             <label class="label py-0 cursor-pointer justify-start gap-1">
               <input type="checkbox" id="filterCiteproc" class="checkbox checkbox-xs">
               <span class="label-text text-xs">citeproc (citations)</span>
-              <div class="tooltip tooltip-right" data-tip="Process citations and bibliographies. Use [@key] to cite, requires a .bib file. Supports CSL styles for formatting.">
+              <div class="tooltip tooltip-end" data-tip="Process citations and bibliographies. Use [@key] to cite, requires a .bib file. Supports CSL styles for formatting.">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
             </label>
@@ -524,7 +524,7 @@
         <div class="form-control">
           <div class="flex items-center gap-1">
             <label class="label py-0"><span class="label-text text-xs">Extra Arguments</span></label>
-            <div class="tooltip tooltip-right" data-tip="Additional pandoc command-line arguments. Examples: --shift-heading-level-by=-1, --wrap=none, --columns=80">
+            <div class="tooltip tooltip-end" data-tip="Additional pandoc command-line arguments. Examples: --shift-heading-level-by=-1, --wrap=none, --columns=80">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
           </div>
