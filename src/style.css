@@ -68,6 +68,13 @@
 
 .collapse-content {
   padding-top: 0 !important;
+  overflow: visible !important;
+}
+
+/* Tooltips must not be clipped by collapse */
+.collapse-content .tooltip {
+  position: relative;
+  z-index: 50;
 }
 
 /* Compact form controls */
