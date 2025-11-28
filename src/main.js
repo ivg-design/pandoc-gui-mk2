@@ -298,16 +298,41 @@ function buildPandocCommand() {
     }
 
     // Header/Footer (via fancyhdr)
-    const hasHeader = $('headerLeft').value || $('headerCenter').value || $('headerRight').value;
-    const hasFooter = $('footerLeft').value || $('footerCenter').value || $('footerRight').value;
+    // Token replacements for header/footer
+    const replaceTokens = (str) => {
+      if (!str) return str;
+      return str
+        .replace(/\{title\}/g, '\\\\@title')
+        .replace(/\{author\}/g, '\\\\@author')
+        .replace(/\{date\}/g, '\\\\@date')
+        .replace(/\{page\}/g, '\\\\thepage')
+        .replace(/\{pages\}/g, '\\\\pageref{LastPage}')
+        .replace(/\{chapter\}/g, '\\\\leftmark')
+        .replace(/\{section\}/g, '\\\\rightmark')
+        .replace(/\{file\}/g, inputFileName || 'document');
+    };
+
+    const headerL = replaceTokens($('headerLeft').value);
+    const headerC = replaceTokens($('headerCenter').value);
+    const headerR = replaceTokens($('headerRight').value);
+    const footerL = replaceTokens($('footerLeft').value);
+    const footerC = replaceTokens($('footerCenter').value);
+    const footerR = replaceTokens($('footerRight').value);
+
+    const hasHeader = headerL || headerC || headerR;
+    const hasFooter = footerL || footerC || footerR;
+    const needsLastPage = [headerL, headerC, headerR, footerL, footerC, footerR].some(s => s && s.includes('LastPage'));
+
     if (hasHeader || hasFooter) {
-      args.push('-V header-includes="\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}"');
-      if ($('headerLeft').value) args.push(`-V header-includes="\\\\lhead{${$('headerLeft').value}}"`);
-      if ($('headerCenter').value) args.push(`-V header-includes="\\\\chead{${$('headerCenter').value}}"`);
-      if ($('headerRight').value) args.push(`-V header-includes="\\\\rhead{${$('headerRight').value}}"`);
-      if ($('footerLeft').value) args.push(`-V header-includes="\\\\lfoot{${$('footerLeft').value}}"`);
-      if ($('footerCenter').value) args.push(`-V header-includes="\\\\cfoot{${$('footerCenter').value}}"`);
-      if ($('footerRight').value) args.push(`-V header-includes="\\\\rfoot{${$('footerRight').value}}"`);
+      let includes = '\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}';
+      if (needsLastPage) includes += '\\\\usepackage{lastpage}';
+      args.push(`-V header-includes="${includes}"`);
+      if (headerL) args.push(`-V header-includes="\\\\lhead{${headerL}}"`);
+      if (headerC) args.push(`-V header-includes="\\\\chead{${headerC}}"`);
+      if (headerR) args.push(`-V header-includes="\\\\rhead{${headerR}}"`);
+      if (footerL) args.push(`-V header-includes="\\\\lfoot{${footerL}}"`);
+      if (footerC) args.push(`-V header-includes="\\\\cfoot{${footerC}}"`);
+      if (footerR) args.push(`-V header-includes="\\\\rfoot{${footerR}}"`);
     }
 
     // Page numbering

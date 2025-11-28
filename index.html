@@ -164,30 +164,44 @@
       <input type="checkbox">
       <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Header, Footer & Page Numbers</div>
       <div class="collapse-content px-4 pb-3 space-y-2">
+        <!-- Token Reference -->
+        <div class="text-xs bg-base-300 rounded p-2 mb-2">
+          <div class="font-semibold mb-1">Available tokens:</div>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-base-content/80">
+            <span><code class="bg-base-100 px-1 rounded">{title}</code> Document title</span>
+            <span><code class="bg-base-100 px-1 rounded">{author}</code> Author name</span>
+            <span><code class="bg-base-100 px-1 rounded">{date}</code> Document date</span>
+            <span><code class="bg-base-100 px-1 rounded">{page}</code> Current page</span>
+            <span><code class="bg-base-100 px-1 rounded">{pages}</code> Total pages</span>
+            <span><code class="bg-base-100 px-1 rounded">{chapter}</code> Chapter title</span>
+            <span><code class="bg-base-100 px-1 rounded">{section}</code> Section title</span>
+            <span><code class="bg-base-100 px-1 rounded">{file}</code> Filename</span>
+          </div>
+        </div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Header Left</span></label>
-          <input type="text" id="headerLeft" class="input input-bordered input-xs" placeholder="e.g., Document Title">
+          <input type="text" id="headerLeft" class="input input-bordered input-xs font-mono" placeholder="{title}">
         </div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Header Center</span></label>
-          <input type="text" id="headerCenter" class="input input-bordered input-xs" placeholder="">
+          <input type="text" id="headerCenter" class="input input-bordered input-xs font-mono" placeholder="">
         </div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Header Right</span></label>
-          <input type="text" id="headerRight" class="input input-bordered input-xs" placeholder="e.g., \\thepage">
+          <input type="text" id="headerRight" class="input input-bordered input-xs font-mono" placeholder="{page}">
         </div>
         <div class="divider my-1 text-xs">Footer</div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Footer Left</span></label>
-          <input type="text" id="footerLeft" class="input input-bordered input-xs" placeholder="">
+          <input type="text" id="footerLeft" class="input input-bordered input-xs font-mono" placeholder="{author}">
         </div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Footer Center</span></label>
-          <input type="text" id="footerCenter" class="input input-bordered input-xs" placeholder="e.g., Page \\thepage">
+          <input type="text" id="footerCenter" class="input input-bordered input-xs font-mono" placeholder="Page {page} of {pages}">
         </div>
         <div class="form-control">
           <label class="label py-0"><span class="label-text text-xs">Footer Right</span></label>
-          <input type="text" id="footerRight" class="input input-bordered input-xs" placeholder="">
+          <input type="text" id="footerRight" class="input input-bordered input-xs font-mono" placeholder="{date}">
         </div>
         <div class="divider my-1 text-xs">Page Numbering</div>
         <div class="grid grid-cols-3 gap-2">
