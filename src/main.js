@@ -431,6 +431,20 @@ function buildPandocCommand() {
     }
   }
 
+  // List of Figures / Tables
+  if ($('lof') && $('lof').checked) {
+    args.push('-V lof=true');
+  }
+  if ($('lot') && $('lot').checked) {
+    args.push('-V lot=true');
+  }
+
+  // Top-level division
+  const topLevelDiv = $('topLevelDiv');
+  if (topLevelDiv && topLevelDiv.value !== 'default') {
+    args.push(`--top-level-division=${topLevelDiv.value}`);
+  }
+
   // Number sections
   if ($('numberSections').checked) {
     args.push('-N');
@@ -551,10 +565,145 @@ function setupConversion() {
 // Event listeners for all inputs
 function setupInputListeners() {
   document.querySelectorAll('input, select').forEach(input => {
-    if (!['inputFile', 'themeToggle'].includes(input.id)) {
+    if (!['inputFile', 'themeToggle', 'presetSelect'].includes(input.id)) {
       input.addEventListener('change', updateCommandPreview);
       input.addEventListener('input', updateCommandPreview);
     }
+  });
+}
+
+// Preset Management
+const PRESET_STORAGE_KEY = 'pandoc-gui-presets';
+
+function getPresets() {
+  try {
+    return JSON.parse(localStorage.getItem(PRESET_STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function savePresets(presets) {
+  localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+}
+
+function getSettingsIds() {
+  // All the form elements we want to save/restore
+  return [
+    'outputFormat', 'outputTheme', 'pdfEngine', 'titlePage', 'toc', 'lof', 'lot',
+    'numberSections', 'standalone', 'tocDepth', 'tocNewPage', 'topLevelDiv',
+    'paperSize', 'orientation', 'marginUnit', 'uniformMargins', 'marginAll',
+    'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
+    'headerLeft', 'headerCenter', 'headerRight', 'footerLeft', 'footerCenter', 'footerRight',
+    'pageNumberFormat', 'pageNumberStyle', 'pageNumberPosition',
+    'mainFont', 'monoFont', 'fontSize', 'lineHeight',
+    'highlightTheme', 'lineNumbers', 'codeBlockBg', 'codeBlockBgColor',
+    'docTitle', 'docAuthor', 'docDate', 'documentClass',
+    'filterCrossref', 'filterCiteproc', 'extraArgs', 'colorLinks', 'linkColor', 'openOnComplete'
+  ];
+}
+
+function getCurrentSettings() {
+  const settings = {};
+  getSettingsIds().forEach(id => {
+    const el = $(id);
+    if (el) {
+      if (el.type === 'checkbox') {
+        settings[id] = el.checked;
+      } else {
+        settings[id] = el.value;
+      }
+    }
+  });
+  // Also save mermaid format
+  const mermaidRadio = document.querySelector('input[name="mermaidFormat"]:checked');
+  if (mermaidRadio) settings.mermaidFormat = mermaidRadio.value;
+  return settings;
+}
+
+function applySettings(settings) {
+  getSettingsIds().forEach(id => {
+    const el = $(id);
+    if (el && settings[id] !== undefined) {
+      if (el.type === 'checkbox') {
+        el.checked = settings[id];
+      } else {
+        el.value = settings[id];
+      }
+    }
+  });
+  // Restore mermaid format
+  if (settings.mermaidFormat) {
+    const radio = document.querySelector(`input[name="mermaidFormat"][value="${settings.mermaidFormat}"]`);
+    if (radio) radio.checked = true;
+  }
+  // Trigger UI updates
+  $('uniformMargins').dispatchEvent(new Event('change'));
+  $('toc').dispatchEvent(new Event('change'));
+  $('codeBlockBg').dispatchEvent(new Event('change'));
+  $('outputFormat').dispatchEvent(new Event('change'));
+  updateCodePreview();
+  updateCommandPreview();
+}
+
+function updatePresetDropdown() {
+  const select = $('presetSelect');
+  const presets = getPresets();
+  // Clear existing options except first
+  while (select.options.length > 1) select.remove(1);
+  // Add presets
+  Object.keys(presets).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+
+function setupPresets() {
+  updatePresetDropdown();
+
+  $('savePreset').addEventListener('click', () => {
+    const name = prompt('Enter preset name:');
+    if (!name) return;
+    const presets = getPresets();
+    presets[name] = getCurrentSettings();
+    savePresets(presets);
+    updatePresetDropdown();
+    $('presetSelect').value = name;
+    showToast(`Preset "${name}" saved`, 'success');
+  });
+
+  $('loadPreset').addEventListener('click', () => {
+    const name = $('presetSelect').value;
+    if (!name) {
+      showToast('Select a preset first', 'warning');
+      return;
+    }
+    const presets = getPresets();
+    if (presets[name]) {
+      applySettings(presets[name]);
+      showToast(`Preset "${name}" loaded`, 'success');
+    }
+  });
+
+  $('deletePreset').addEventListener('click', () => {
+    const name = $('presetSelect').value;
+    if (!name) {
+      showToast('Select a preset first', 'warning');
+      return;
+    }
+    if (!confirm(`Delete preset "${name}"?`)) return;
+    const presets = getPresets();
+    delete presets[name];
+    savePresets(presets);
+    updatePresetDropdown();
+    showToast(`Preset "${name}" deleted`, 'info');
+  });
+
+  // Double-click to load
+  $('presetSelect').addEventListener('dblclick', () => {
+    $('loadPreset').click();
   });
 }
 
@@ -570,6 +719,7 @@ function init() {
   setupCopyCommand();
   setupConversion();
   setupInputListeners();
+  setupPresets();
 
   $('themeToggle').addEventListener('change', toggleTheme);
 
