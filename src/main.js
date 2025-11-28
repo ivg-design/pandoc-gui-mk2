@@ -4,8 +4,32 @@
 let inputFilePath = null;
 let inputFileName = null;
 let inputFileContent = null;
-let systemFonts = [];
-let monoFonts = [];
+
+// Common fonts that are typically available on most systems
+const commonFonts = [
+  'Arial', 'Arial Black', 'Book Antiqua', 'Bookman Old Style', 'Century Gothic',
+  'Comic Sans MS', 'Courier New', 'Garamond', 'Georgia', 'Helvetica', 'Impact',
+  'Lucida Console', 'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Palatino Linotype',
+  'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+  // macOS
+  'American Typewriter', 'Avenir', 'Baskerville', 'Big Caslon', 'Bodoni 72',
+  'Chalkboard', 'Charter', 'Cochin', 'Copperplate', 'Didot', 'Futura',
+  'Geneva', 'Gill Sans', 'Helvetica Neue', 'Hoefler Text', 'Lucida Grande',
+  'Marker Felt', 'Menlo', 'Monaco', 'Optima', 'Papyrus', 'Phosphate',
+  'Rockwell', 'San Francisco', 'Skia', 'Snell Roundhand', 'STIXGeneral',
+  'Superclarendon', 'Times', 'Zapfino',
+  // Linux
+  'DejaVu Sans', 'DejaVu Serif', 'Liberation Sans', 'Liberation Serif',
+  'Noto Sans', 'Noto Serif', 'Ubuntu', 'Cantarell', 'Droid Sans', 'Droid Serif'
+];
+
+const monoFonts = [
+  'Courier New', 'Menlo', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code',
+  'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Inconsolata',
+  'Roboto Mono', 'Ubuntu Mono', 'Hack', 'Anonymous Pro', 'Cascadia Code',
+  'DejaVu Sans Mono', 'Liberation Mono', 'Droid Sans Mono', 'PT Mono',
+  'Noto Sans Mono', 'Input Mono', 'Iosevka', 'Victor Mono'
+];
 
 // Code theme colors for preview (kw=keyword, fn=function, st=string, cm=comment)
 const themeColors = {
@@ -40,63 +64,47 @@ function toggleTheme() {
   updateCommandPreview();
 }
 
-// System Fonts
-async function loadSystemFonts() {
-  try {
-    // Use Local Font Access API if available (Tauri/Chrome)
-    if ('queryLocalFonts' in window) {
-      const fonts = await window.queryLocalFonts();
-      const fontSet = new Set();
-      const monoSet = new Set();
-
-      fonts.forEach(font => {
-        fontSet.add(font.family);
-        // Heuristic for mono fonts
-        const name = font.family.toLowerCase();
-        if (name.includes('mono') || name.includes('code') || name.includes('consola') ||
-            name.includes('courier') || name.includes('menlo') || name.includes('fira code') ||
-            name.includes('source code') || name.includes('jetbrains') || name.includes('hack')) {
-          monoSet.add(font.family);
-        }
-      });
-
-      systemFonts = [...fontSet].sort();
-      monoFonts = [...monoSet].sort();
-    } else {
-      // Fallback common fonts
-      systemFonts = ['Arial', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana', 'Palatino', 'Garamond'];
-      monoFonts = ['Courier New', 'Menlo', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code', 'JetBrains Mono'];
-    }
-
-    populateFontDropdowns();
-  } catch (e) {
-    console.log('Font access not available:', e);
-    // Use fallback fonts
-    systemFonts = ['Arial', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
-    monoFonts = ['Courier New', 'Menlo', 'Monaco', 'Consolas'];
-    populateFontDropdowns();
-  }
-}
-
-function populateFontDropdowns() {
+// System Fonts - populate from common list, check availability
+function loadSystemFonts() {
   const mainFontSelect = $('mainFont');
   const monoFontSelect = $('monoFont');
 
-  // Main fonts
-  systemFonts.forEach(font => {
+  // Test font availability using canvas
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const testString = 'mmmmmmmmmmlli';
+  const testSize = '72px';
+  const baselineFont = 'monospace';
+
+  ctx.font = `${testSize} ${baselineFont}`;
+  const baselineWidth = ctx.measureText(testString).width;
+
+  function isFontAvailable(font) {
+    ctx.font = `${testSize} "${font}", ${baselineFont}`;
+    return ctx.measureText(testString).width !== baselineWidth;
+  }
+
+  // Populate main fonts
+  const availableFonts = commonFonts.filter(isFontAvailable).sort();
+  availableFonts.forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
+    opt.style.fontFamily = font;
     mainFontSelect.appendChild(opt);
   });
 
-  // Mono fonts only
-  monoFonts.forEach(font => {
+  // Populate mono fonts
+  const availableMonoFonts = monoFonts.filter(isFontAvailable).sort();
+  availableMonoFonts.forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
+    opt.style.fontFamily = font;
     monoFontSelect.appendChild(opt);
   });
+
+  console.log(`Loaded ${availableFonts.length} main fonts, ${availableMonoFonts.length} mono fonts`);
 }
 
 // File Handling
@@ -110,14 +118,12 @@ function setupFileHandling() {
   });
 
   $('browseOutput').addEventListener('click', () => {
-    // In web mode, just allow editing the path
     // In Tauri, this would open a save dialog
     if (window.__TAURI__) {
       // Tauri save dialog
     }
   });
 
-  // Allow editing output path
   $('outputPath').addEventListener('input', updateCommandPreview);
 }
 
@@ -184,11 +190,9 @@ function updateCodePreview() {
     el.style.fontStyle = 'italic';
   });
 
-  // Set text color based on background brightness
   const isLightTheme = ['pygments', 'kate', 'tango'].includes(theme);
   preview.style.color = isLightTheme ? '#333' : '#ddd';
 
-  // Update bg color picker to match theme default
   if (!$('codeBlockBgColor').dataset.userSet) {
     $('codeBlockBgColor').value = colors.bg;
   }
@@ -219,9 +223,11 @@ function setupFormatHandling() {
   $('outputFormat').addEventListener('change', () => {
     const format = $('outputFormat').value;
     const isPdf = format === 'pdf';
+    const needsStandalone = ['html', 'latex'].includes(format);
 
     $('pdfEngineSection').classList.toggle('hidden', !isPdf);
     $('docClassSection').classList.toggle('hidden', !isPdf);
+    $('standaloneLabel').classList.toggle('hidden', !needsStandalone);
 
     // Update output path extension
     const outputPath = $('outputPath').value;
@@ -237,7 +243,7 @@ function setupFormatHandling() {
 // TOC Toggle
 function setupTocHandling() {
   $('toc').addEventListener('change', () => {
-    $('tocDepthSection').classList.toggle('hidden', !$('toc').checked);
+    $('tocOptions').classList.toggle('hidden', !$('toc').checked);
     updateCommandPreview();
   });
 
@@ -245,6 +251,21 @@ function setupTocHandling() {
     $('tocDepthValue').textContent = $('tocDepth').value;
     updateCommandPreview();
   });
+}
+
+// Replace metadata tokens
+function replaceMetadataTokens(str) {
+  if (!str) return str;
+  const now = new Date();
+  const today = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const year = now.getFullYear().toString();
+  const baseName = inputFileName ? inputFileName.replace(/\.[^/.]+$/, '') : 'document';
+
+  return str
+    .replace(/\{today\}/g, today)
+    .replace(/\{year\}/g, year)
+    .replace(/\{file\}/g, baseName)
+    .replace(/\{user\}/g, 'User'); // In Tauri, we'd get the actual username
 }
 
 // Build Pandoc Command
@@ -265,13 +286,13 @@ function buildPandocCommand() {
   const finalOutput = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
   args.push(`-o "${finalOutput}"`);
 
-  // Standalone
-  if ($('standalone').checked) {
+  // Standalone (only for HTML/LaTeX, always true for PDF)
+  const isPdf = format === 'pdf';
+  if (isPdf || $('standalone').checked) {
     args.push('-s');
   }
 
   // PDF-specific options
-  const isPdf = format === 'pdf';
   if (isPdf) {
     args.push(`--pdf-engine=${$('pdfEngine').value}`);
     args.push(`-V documentclass=${$('documentClass').value}`);
@@ -297,9 +318,13 @@ function buildPandocCommand() {
       args.push(`-V geometry:${margins.join(',')}`);
     }
 
-    // Header/Footer (via fancyhdr)
-    // Token replacements for header/footer
-    const replaceTokens = (str) => {
+    // Title page
+    if ($('titlePage').checked) {
+      args.push('-V titlepage=true');
+    }
+
+    // Header/Footer tokens
+    const replaceHeaderTokens = (str) => {
       if (!str) return str;
       return str
         .replace(/\{title\}/g, '\\\\@title')
@@ -312,12 +337,12 @@ function buildPandocCommand() {
         .replace(/\{file\}/g, inputFileName || 'document');
     };
 
-    const headerL = replaceTokens($('headerLeft').value);
-    const headerC = replaceTokens($('headerCenter').value);
-    const headerR = replaceTokens($('headerRight').value);
-    const footerL = replaceTokens($('footerLeft').value);
-    const footerC = replaceTokens($('footerCenter').value);
-    const footerR = replaceTokens($('footerRight').value);
+    const headerL = replaceHeaderTokens($('headerLeft').value);
+    const headerC = replaceHeaderTokens($('headerCenter').value);
+    const headerR = replaceHeaderTokens($('headerRight').value);
+    const footerL = replaceHeaderTokens($('footerLeft').value);
+    const footerC = replaceHeaderTokens($('footerCenter').value);
+    const footerR = replaceHeaderTokens($('footerRight').value);
 
     const hasHeader = headerL || headerC || headerR;
     const hasFooter = footerL || footerC || footerR;
@@ -340,8 +365,7 @@ function buildPandocCommand() {
     const pageFormat = $('pageNumberFormat').value;
     if (pagePos === 'none') {
       args.push('-V pagestyle=empty');
-    } else {
-      // Build page number string based on format
+    } else if (!hasHeader && !hasFooter) {
       let pageNum;
       switch (pageFormat) {
         case 'page-of':
@@ -355,12 +379,11 @@ function buildPandocCommand() {
         case 'number':
           pageNum = '\\\\thepage';
           break;
-        default: // 'page'
+        default:
           pageNum = 'Page \\\\thepage';
       }
 
-      // Apply position (if not using custom header/footer)
-      if (!hasHeader && !hasFooter && pagePos !== 'bottom-center') {
+      if (pagePos !== 'bottom-center') {
         args.push('-V header-includes="\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}"');
         if (pagePos === 'bottom-right') {
           args.push(`-V header-includes="\\\\rfoot{${pageNum}}"`);
@@ -397,16 +420,15 @@ function buildPandocCommand() {
   // Code highlighting
   args.push(`--highlight-style=${$('highlightTheme').value}`);
 
-  // Output theme (for HTML)
-  const outputTheme = $('outputTheme').value;
-  if (format === 'html' && outputTheme !== 'auto') {
-    // Could add CSS variables or theme class
-  }
-
   // TOC
   if ($('toc').checked) {
     args.push('--toc');
     args.push(`--toc-depth=${$('tocDepth').value}`);
+
+    // New page after TOC
+    if ($('tocNewPage') && $('tocNewPage').checked && isPdf) {
+      args.push('-V toc-own-page=true');
+    }
   }
 
   // Number sections
@@ -414,16 +436,14 @@ function buildPandocCommand() {
     args.push('-N');
   }
 
-  // Metadata
-  if ($('docTitle').value) {
-    args.push(`-M title="${$('docTitle').value}"`);
-  }
-  if ($('docAuthor').value) {
-    args.push(`-M author="${$('docAuthor').value}"`);
-  }
-  if ($('docDate').value) {
-    args.push(`-M date="${$('docDate').value}"`);
-  }
+  // Metadata with token replacement
+  const title = replaceMetadataTokens($('docTitle').value);
+  const author = replaceMetadataTokens($('docAuthor').value);
+  const date = replaceMetadataTokens($('docDate').value);
+
+  if (title) args.push(`-M title="${title}"`);
+  if (author) args.push(`-M author="${author}"`);
+  if (date) args.push(`-M date="${date}"`);
 
   // Mermaid filter (auto-enabled if detected)
   const hasMermaid = !$('mermaidDetected').classList.contains('hidden');
@@ -505,6 +525,14 @@ function setupConversion() {
         await invoke('run_pandoc', { command });
         $('statusText').textContent = 'Done!';
         showToast('Converted successfully!', 'success');
+
+        // Open on complete
+        if ($('openOnComplete').checked) {
+          const outputPath = $('outputPath').value;
+          const ext = getExtensionForFormat($('outputFormat').value);
+          const finalPath = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
+          await invoke('open_file', { path: finalPath });
+        }
       } else {
         setTimeout(() => {
           $('statusText').textContent = 'Web mode: copy command to run';
