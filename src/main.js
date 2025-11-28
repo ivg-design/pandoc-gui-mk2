@@ -64,6 +64,52 @@ function toggleTheme() {
   updateCommandPreview();
 }
 
+// Dependency Checker
+async function checkDependencies() {
+  const missing = [];
+
+  // Check for pandoc
+  if (window.__TAURI__) {
+    const { invoke } = window.__TAURI__;
+    try {
+      await invoke('check_command', { cmd: 'pandoc' });
+    } catch (e) {
+      missing.push({
+        name: 'pandoc',
+        install: 'brew install pandoc (macOS) or apt install pandoc (Linux)',
+        url: 'https://pandoc.org/installing.html'
+      });
+    }
+
+    // Check for tectonic (PDF engine)
+    try {
+      await invoke('check_command', { cmd: 'tectonic' });
+    } catch (e) {
+      missing.push({
+        name: 'tectonic',
+        install: 'brew install tectonic (macOS) or cargo install tectonic (Linux)',
+        url: 'https://tectonic-typesetting.github.io/en-US/'
+      });
+    }
+  } else {
+    // In web mode, show info message about dependencies
+    console.info('Dependencies must be installed on the system before using conversion:');
+    console.info('- pandoc: https://pandoc.org/installing.html');
+    console.info('- tectonic (for PDF): https://tectonic-typesetting.github.io/');
+  }
+
+  if (missing.length > 0 && window.__TAURI__) {
+    const msg = missing.map(dep =>
+      `${dep.name}: ${dep.install}`
+    ).join('\n\n');
+
+    showToast(
+      `Missing dependencies:\n\n${msg}\n\nVisit the links in console for installation instructions.`,
+      'warning'
+    );
+  }
+}
+
 // System Fonts - populate all common fonts (pandoc/LaTeX will use what's available)
 function loadSystemFonts() {
   const mainFontSelect = $('mainFont');
@@ -397,7 +443,7 @@ function buildPandocCommand() {
   }
 
   // Code highlighting
-  args.push(`--highlight-style=${$('highlightTheme').value}`);
+  args.push(`--syntax-highlighting=${$('highlightTheme').value}`);
 
   // TOC
   if ($('toc').checked) {
@@ -703,6 +749,9 @@ function init() {
   $('themeToggle').addEventListener('change', toggleTheme);
 
   updateCommandPreview();
+
+  // Check dependencies on startup
+  checkDependencies();
 }
 
 document.addEventListener('DOMContentLoaded', init);
