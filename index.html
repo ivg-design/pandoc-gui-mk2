@@ -122,26 +122,44 @@
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="titlePage" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Title Page</span>
+            <div class="tooltip tooltip-top" data-tip="Generate a separate title page with title, author, and date centered">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="toc" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Table of Contents</span>
+            <div class="tooltip tooltip-top" data-tip="Auto-generate a clickable table of contents from your headings">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="lof" class="checkbox checkbox-xs">
             <span class="label-text text-xs">List of Figures</span>
+            <div class="tooltip tooltip-top" data-tip="Generate a list of all figures with page numbers">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="lot" class="checkbox checkbox-xs">
             <span class="label-text text-xs">List of Tables</span>
+            <div class="tooltip tooltip-top" data-tip="Generate a list of all tables with page numbers">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
           <label class="label py-1 cursor-pointer justify-start gap-2">
             <input type="checkbox" id="numberSections" class="checkbox checkbox-xs">
             <span class="label-text text-xs">Number Sections</span>
+            <div class="tooltip tooltip-top" data-tip="Add numbers to headings: 1. Intro, 1.1 Background, 2. Methods...">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
           <label id="standaloneLabel" class="label py-1 cursor-pointer justify-start gap-2 hidden">
             <input type="checkbox" id="standalone" class="checkbox checkbox-xs" checked>
             <span class="label-text text-xs">Standalone</span>
+            <div class="tooltip tooltip-top" data-tip="Create complete HTML file with doctype. Disable for fragment to embed elsewhere.">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </label>
         </div>
         <!-- TOC Options -->
@@ -158,13 +176,13 @@
         </div>
         <!-- Top-level division -->
         <div class="form-control" id="topLevelDivSection">
-          <label class="label py-1">
+          <div class="flex items-center gap-2">
             <span class="label-text text-xs">Top-level headings are:</span>
-            <div class="tooltip tooltip-left" data-tip="Determines what H1 becomes in the document. 'Chapter' creates chapter breaks, 'Section' for articles without chapters.">
+            <div class="tooltip tooltip-top" data-tip="What H1 becomes: Chapter (with page breaks), Section (no breaks), Part (major divisions)">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-          </label>
-          <select id="topLevelDiv" class="select select-bordered select-xs w-full">
+          </div>
+          <select id="topLevelDiv" class="select select-bordered select-xs w-full mt-1">
             <option value="default" selected>Default (based on document class)</option>
             <option value="part">Part</option>
             <option value="chapter">Chapter</option>
