@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dim">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +8,7 @@
   <link rel="icon" href="/icon.png" type="image/png">
 </head>
 <body class="min-h-screen bg-base-100">
-  <!-- Compact Header -->
+  <!-- Navbar -->
   <div class="navbar bg-base-200 shadow-sm px-4 min-h-12">
     <div class="flex-1 gap-2">
       <img src="/icon.png" alt="Pandoc GUI" class="w-6 h-6">
@@ -23,35 +23,37 @@
     </div>
   </div>
 
-  <!-- Main Content - Single Column -->
-  <div class="max-w-xl mx-auto p-3 space-y-3">
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto p-4 space-y-4">
 
-    <!-- File I/O Section -->
+    <!-- File I/O Section (Always visible) -->
     <div class="card bg-base-200 shadow">
       <div class="card-body p-4 space-y-3">
-        <!-- Input File -->
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text font-semibold">Input File</span></label>
-          <div class="flex gap-2">
-            <input type="text" id="inputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Select input file..." readonly>
-            <button id="browseInput" class="btn btn-sm btn-outline">Browse</button>
-          </div>
-          <input type="file" id="inputFile" class="hidden" accept=".md,.markdown,.rst,.tex,.latex,.docx,.doc,.html,.htm,.org,.txt,.adoc,.asciidoc,.epub,.odt,.rtf,.json,.yaml,.yml">
-        </div>
-
-        <!-- Output File -->
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text font-semibold">Output</span></label>
-          <div class="flex gap-2">
-            <input type="text" id="outputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Output location...">
-            <button id="browseOutput" class="btn btn-sm btn-outline">Browse</button>
-          </div>
-        </div>
-
-        <!-- Output Format -->
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <!-- Input File -->
           <div class="form-control">
-            <label class="label py-1"><span class="label-text text-xs">Format</span></label>
+            <label class="label py-1"><span class="label-text font-semibold">Input File</span></label>
+            <div class="flex gap-2">
+              <input type="text" id="inputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Select input file..." readonly>
+              <button id="browseInput" class="btn btn-sm btn-outline">Browse</button>
+            </div>
+            <input type="file" id="inputFile" class="hidden" accept=".md,.markdown,.rst,.tex,.latex,.docx,.doc,.html,.htm,.org,.txt,.adoc,.asciidoc,.epub,.odt,.rtf,.json,.yaml,.yml">
+          </div>
+
+          <!-- Output Path -->
+          <div class="form-control">
+            <label class="label py-1"><span class="label-text font-semibold">Output Path</span></label>
+            <div class="flex gap-2">
+              <input type="text" id="outputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Output location...">
+              <button id="browseOutput" class="btn btn-sm btn-outline">Browse</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Format & Output Style -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-control">
+            <label class="label py-1"><span class="label-text text-sm font-medium">Format</span></label>
             <select id="outputFormat" class="select select-bordered select-sm">
               <option value="pdf" selected>PDF</option>
               <option value="docx">Word (.docx)</option>
@@ -66,7 +68,7 @@
             </select>
           </div>
           <div class="form-control">
-            <label class="label py-1"><span class="label-text text-xs">Output Style</span></label>
+            <label class="label py-1"><span class="label-text text-sm font-medium">Output Style</span></label>
             <select id="outputTheme" class="select select-bordered select-sm">
               <option value="auto">Auto (match app)</option>
               <option value="light">Light Mode</option>
@@ -77,9 +79,9 @@
       </div>
     </div>
 
-    <!-- Presets -->
+    <!-- Presets Section (Always visible) -->
     <div class="card bg-base-200 shadow">
-      <div class="card-body p-3">
+      <div class="card-body p-4">
         <div class="flex gap-2 items-center">
           <select id="presetSelect" class="select select-bordered select-sm flex-1">
             <option value="">Select preset...</option>
@@ -97,476 +99,508 @@
       </div>
     </div>
 
-    <!-- PDF Engine (collapsible, shown for PDF) -->
-    <div id="pdfEngineSection" class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox" checked>
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">PDF Engine</div>
-      <div class="collapse-content px-4 pb-3">
-        <select id="pdfEngine" class="select select-bordered select-sm w-full">
-          <option value="tectonic" selected>Tectonic (emojis, auto-packages)</option>
-          <option value="lualatex">LuaLaTeX (modern Unicode)</option>
-          <option value="xelatex">XeLaTeX (custom fonts)</option>
-          <option value="pdflatex">pdfLaTeX (classic)</option>
-          <option value="weasyprint">WeasyPrint (HTML-based)</option>
-        </select>
-        <p class="text-xs text-base-content/60 mt-1">Tectonic recommended for emoji and multilingual support</p>
-      </div>
-    </div>
-
-    <!-- Document Structure -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox" checked>
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Document Structure</div>
-      <div class="collapse-content px-4 pb-3 space-y-3">
-        <div class="grid grid-cols-2 gap-2">
-          <label class="label py-1 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="titlePage" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">Title Page</span>
-            <div class="tooltip tooltip-end" data-tip="Generate a separate title page with title, author, and date centered">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-          <label class="label py-1 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="toc" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">Table of Contents</span>
-            <div class="tooltip tooltip-end" data-tip="Auto-generate a clickable table of contents from your headings">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-          <label class="label py-1 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="lof" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">List of Figures</span>
-            <div class="tooltip tooltip-end" data-tip="Generate a list of all figures with page numbers">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-          <label class="label py-1 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="lot" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">List of Tables</span>
-            <div class="tooltip tooltip-end" data-tip="Generate a list of all tables with page numbers">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-          <label class="label py-1 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="numberSections" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">Number Sections</span>
-            <div class="tooltip tooltip-end" data-tip="Add numbers to headings: 1. Intro, 1.1 Background, 2. Methods...">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-          <label id="standaloneLabel" class="label py-1 cursor-pointer justify-start gap-2 hidden">
-            <input type="checkbox" id="standalone" class="checkbox checkbox-xs" checked>
-            <span class="label-text text-xs">Standalone</span>
-            <div class="tooltip tooltip-end" data-tip="Create complete HTML file with doctype. Disable for fragment to embed elsewhere.">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </label>
-        </div>
-        <!-- TOC Options -->
-        <div id="tocOptions" class="hidden space-y-2 pl-2 border-l-2 border-primary/30">
-          <div class="flex items-center gap-3">
-            <span class="text-xs w-20">TOC Depth:</span>
-            <input type="range" id="tocDepth" min="1" max="6" value="3" class="range range-xs range-primary flex-1">
-            <span id="tocDepthValue" class="text-xs w-4">3</span>
-          </div>
-          <label class="label py-0 cursor-pointer justify-start gap-2">
-            <input type="checkbox" id="tocNewPage" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">Content starts on new page after TOC</span>
-          </label>
-        </div>
-        <!-- Top-level division -->
-        <div class="form-control" id="topLevelDivSection">
-          <div class="flex items-center gap-2">
-            <span class="label-text text-xs">Top-level headings are:</span>
-            <div class="tooltip tooltip-end" data-tip="What H1 becomes: Chapter (with page breaks), Section (no breaks), Part (major divisions)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </div>
-          <select id="topLevelDiv" class="select select-bordered select-xs w-full mt-1">
-            <option value="default" selected>Default (based on document class)</option>
-            <option value="part">Part</option>
-            <option value="chapter">Chapter</option>
-            <option value="section">Section</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Page Layout -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox" checked>
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Page Layout</div>
-      <div class="collapse-content px-4 pb-3 space-y-2">
-        <div class="grid grid-cols-3 gap-2">
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Size</span></label>
-            <select id="paperSize" class="select select-bordered select-xs">
-              <option value="a4" selected>A4</option>
-              <option value="letter">Letter</option>
-              <option value="a5">A5</option>
-              <option value="legal">Legal</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Orientation</span></label>
-            <select id="orientation" class="select select-bordered select-xs">
-              <option value="portrait" selected>Portrait</option>
-              <option value="landscape">Landscape</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Unit</span></label>
-            <select id="marginUnit" class="select select-bordered select-xs">
-              <option value="in" selected>inches</option>
-              <option value="cm">cm</option>
-              <option value="mm">mm</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Margins -->
-        <div class="flex items-center gap-2 mt-2">
-          <label class="label py-0 cursor-pointer gap-1">
-            <input type="checkbox" id="uniformMargins" class="checkbox checkbox-xs" checked>
-            <span class="label-text text-xs">Uniform margins</span>
-          </label>
-        </div>
-        <div id="uniformMarginInput" class="form-control">
-          <div class="flex items-center gap-2">
-            <span class="text-xs w-16">All sides:</span>
-            <input type="number" id="marginAll" class="input input-bordered input-xs w-20" value="1" step="0.25" min="0">
-          </div>
-        </div>
-        <div id="individualMargins" class="grid grid-cols-2 gap-2 hidden">
-          <div class="flex items-center gap-1">
-            <span class="text-xs w-12">Top:</span>
-            <input type="number" id="marginTop" class="input input-bordered input-xs w-16" value="1" step="0.25" min="0">
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="text-xs w-12">Bottom:</span>
-            <input type="number" id="marginBottom" class="input input-bordered input-xs w-16" value="1" step="0.25" min="0">
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="text-xs w-12">Left:</span>
-            <input type="number" id="marginLeft" class="input input-bordered input-xs w-16" value="1" step="0.25" min="0">
-          </div>
-          <div class="flex items-center gap-1">
-            <span class="text-xs w-12">Right:</span>
-            <input type="number" id="marginRight" class="input input-bordered input-xs w-16" value="1" step="0.25" min="0">
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Header/Footer & Page Numbers -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox">
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Header, Footer & Page Numbers</div>
-      <div class="collapse-content px-4 pb-3 space-y-2">
-        <!-- Token Reference -->
-        <div class="text-xs bg-base-300 rounded p-2 mb-2">
-          <div class="font-semibold mb-1">Available tokens:</div>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-base-content/80">
-            <span><code class="bg-base-100 px-1 rounded">{title}</code> Document title</span>
-            <span><code class="bg-base-100 px-1 rounded">{author}</code> Author name</span>
-            <span><code class="bg-base-100 px-1 rounded">{date}</code> Document date</span>
-            <span><code class="bg-base-100 px-1 rounded">{page}</code> Current page</span>
-            <span><code class="bg-base-100 px-1 rounded">{pages}</code> Total pages</span>
-            <span><code class="bg-base-100 px-1 rounded">{chapter}</code> Chapter title</span>
-            <span><code class="bg-base-100 px-1 rounded">{section}</code> Section title</span>
-            <span><code class="bg-base-100 px-1 rounded">{file}</code> Filename</span>
-          </div>
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Header Left</span></label>
-          <input type="text" id="headerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{title}">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Header Center</span></label>
-          <input type="text" id="headerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Header Right</span></label>
-          <input type="text" id="headerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{page}">
-        </div>
-        <div class="divider my-1 text-xs">Footer</div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Footer Left</span></label>
-          <input type="text" id="footerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{author}">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Footer Center</span></label>
-          <input type="text" id="footerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="Page {page} of {pages}">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Footer Right</span></label>
-          <input type="text" id="footerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{date}">
-        </div>
-        <div class="divider my-1 text-xs">Page Numbering</div>
-        <div class="grid grid-cols-3 gap-2">
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-xs">Format</span></label>
-            <select id="pageNumberFormat" class="select select-bordered select-xs w-full">
-              <option value="page" selected>Page N</option>
-              <option value="page-of">Page N of X</option>
-              <option value="number">N</option>
-              <option value="number-of">N / X</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-xs">Style</span></label>
-            <select id="pageNumberStyle" class="select select-bordered select-xs w-full">
-              <option value="arabic" selected>1, 2, 3</option>
-              <option value="roman">i, ii, iii</option>
-              <option value="Roman">I, II, III</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-xs">Position</span></label>
-            <select id="pageNumberPosition" class="select select-bordered select-xs w-full">
-              <option value="bottom-center" selected>Bottom Center</option>
-              <option value="bottom-right">Bottom Right</option>
-              <option value="top-right">Top Right</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Typography -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox" checked>
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Typography</div>
-      <div class="collapse-content px-4 pb-3 space-y-2">
-        <div class="grid grid-cols-2 gap-2">
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Main Font</span></label>
-            <select id="mainFont" class="select select-bordered select-xs">
-              <option value="">System Default</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Mono Font</span></label>
-            <select id="monoFont" class="select select-bordered select-xs">
-              <option value="">System Default</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Font Size</span></label>
-            <div class="flex gap-1">
-              <input type="number" id="fontSize" class="input input-bordered input-xs w-16" value="12" min="6" max="72" step="0.5">
-              <span class="text-xs self-center">pt</span>
-            </div>
-          </div>
-          <div class="form-control">
-            <label class="label py-0"><span class="label-text text-xs">Line Height</span></label>
-            <select id="lineHeight" class="select select-bordered select-xs">
-              <option value="1">Single</option>
-              <option value="1.15">1.15</option>
-              <option value="1.5" selected>1.5</option>
-              <option value="2">Double</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Code Highlighting -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox" checked>
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Code Highlighting</div>
-      <div class="collapse-content px-4 pb-3 space-y-2">
-        <div class="form-control">
-          <label class="label py-0"><span class="label-text text-xs">Syntax Theme</span></label>
-          <select id="highlightTheme" class="select select-bordered select-xs w-full">
-            <optgroup label="Light">
-              <option value="pygments">Pygments</option>
-              <option value="kate">Kate</option>
-              <option value="tango">Tango</option>
-              <option value="espresso">Espresso</option>
-            </optgroup>
-            <optgroup label="Dark">
-              <option value="breezedark" selected>Breeze Dark</option>
-              <option value="zenburn">Zenburn</option>
-              <option value="nord">Nord</option>
-              <option value="dracula">Dracula</option>
-              <option value="monokai">Monokai</option>
-              <option value="gruvbox-dark">Gruvbox Dark</option>
-              <option value="solarized-dark">Solarized Dark</option>
-            </optgroup>
-          </select>
-        </div>
-
-        <!-- Code Preview -->
-        <div id="codePreview" class="rounded text-xs font-mono p-2 mt-2 overflow-hidden">
-          <div><span class="cm">// Greeting function</span></div>
-          <div><span class="kw">function</span> <span class="fn">hello</span>() {</div>
-          <div>  <span class="kw">const</span> msg = <span class="st">"Hello"</span>;</div>
-          <div>  <span class="kw">return</span> msg; <span class="cm">// result</span></div>
-          <div>}</div>
-        </div>
-
-        <div class="flex items-center gap-4 mt-2">
-          <label class="label py-0 cursor-pointer gap-1">
-            <input type="checkbox" id="lineNumbers" class="checkbox checkbox-xs">
-            <span class="label-text text-xs">Line numbers</span>
-          </label>
-          <label class="label py-0 cursor-pointer gap-1">
-            <input type="checkbox" id="codeBlockBg" class="checkbox checkbox-xs" checked>
-            <span class="label-text text-xs">Background</span>
-          </label>
-        </div>
-
-        <div id="bgColorPicker" class="flex items-center gap-2">
-          <span class="text-xs">Background color:</span>
-          <input type="color" id="codeBlockBgColor" class="w-8 h-6 rounded cursor-pointer border-0" value="#282a36">
-        </div>
-      </div>
-    </div>
-
-    <!-- Metadata -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox">
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Metadata</div>
-      <div class="collapse-content px-4 pb-3 space-y-2">
-        <!-- Token Reference -->
-        <div class="text-xs bg-base-300 rounded p-2 mb-2">
-          <div class="font-semibold mb-1">Available tokens:</div>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-base-content/80">
-            <span><code class="bg-base-100 px-1 rounded">{today}</code> Today's date</span>
-            <span><code class="bg-base-100 px-1 rounded">{year}</code> Current year</span>
-            <span><code class="bg-base-100 px-1 rounded">{file}</code> Input filename</span>
-            <span><code class="bg-base-100 px-1 rounded">{user}</code> System username</span>
-          </div>
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Title</span></label>
-          <input type="text" id="docTitle" class="input input-bordered input-xs w-full" placeholder="Document title or {file}">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Author</span></label>
-          <input type="text" id="docAuthor" class="input input-bordered input-xs w-full" placeholder="Author name or {user}">
-        </div>
-        <div class="form-control">
-          <label class="label py-1"><span class="label-text text-xs">Date</span></label>
-          <input type="text" id="docDate" class="input input-bordered input-xs w-full" placeholder="{today} or custom date">
-        </div>
-      </div>
-    </div>
-
-    <!-- Advanced Options -->
-    <div class="collapse collapse-arrow bg-base-200 shadow">
-      <input type="checkbox">
-      <div class="collapse-title py-2 px-4 min-h-0 font-semibold text-sm">Advanced Options</div>
-      <div class="collapse-content px-4 pb-3 space-y-3">
-
-        <!-- Mermaid Diagrams -->
-        <div class="space-y-1">
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-semibold">Mermaid Diagrams</span>
-            <span id="mermaidDetected" class="badge badge-xs badge-ghost hidden">detected</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="label py-0 cursor-pointer gap-1">
-              <input type="radio" name="mermaidFormat" value="svg" class="radio radio-xs" checked>
-              <span class="label-text text-xs">SVG (vector)</span>
-            </label>
-            <label class="label py-0 cursor-pointer gap-1">
-              <input type="radio" name="mermaidFormat" value="png" class="radio radio-xs">
-              <span class="label-text text-xs">PNG (raster)</span>
-            </label>
-          </div>
-          <p class="text-xs text-base-content/50">Mermaid diagrams are auto-detected and rendered</p>
-        </div>
-
-        <!-- Document Class -->
-        <div class="form-control" id="docClassSection">
-          <div class="flex items-center gap-1">
-            <label class="label py-0"><span class="label-text text-xs">Document Class</span></label>
-            <div class="tooltip tooltip-end" data-tip="LaTeX document classes define the overall layout: article (short docs), report (longer with chapters), book (two-sided printing), memoir (flexible), KOMA classes (European typography)">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </div>
-          <select id="documentClass" class="select select-bordered select-xs">
-            <option value="article">Article (short documents)</option>
-            <option value="report">Report (chapters, longer docs)</option>
-            <option value="book">Book (two-sided, chapters)</option>
-            <option value="memoir">Memoir (flexible, advanced)</option>
-            <option value="scrartcl">KOMA Article (European)</option>
-          </select>
-        </div>
-
-        <!-- Pandoc Filters -->
-        <div class="space-y-1">
-          <span class="text-xs font-semibold">Processing Filters</span>
-          <div class="flex flex-col gap-1">
-            <label class="label py-0 cursor-pointer justify-start gap-1">
-              <input type="checkbox" id="filterCrossref" class="checkbox checkbox-xs">
-              <span class="label-text text-xs">pandoc-crossref</span>
-              <div class="tooltip tooltip-end" data-tip="Enables cross-references: @fig:name for figures, @eq:name for equations, @sec:name for sections. Use {#fig:name} to label items.">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-            </label>
-            <label class="label py-0 cursor-pointer justify-start gap-1">
-              <input type="checkbox" id="filterCiteproc" class="checkbox checkbox-xs">
-              <span class="label-text text-xs">citeproc (citations)</span>
-              <div class="tooltip tooltip-end" data-tip="Process citations and bibliographies. Use [@key] to cite, requires a .bib file. Supports CSL styles for formatting.">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- Extra Pandoc Arguments -->
-        <div class="form-control">
-          <div class="flex items-center gap-1">
-            <label class="label py-0"><span class="label-text text-xs">Extra Arguments</span></label>
-            <div class="tooltip tooltip-end" data-tip="Additional pandoc command-line arguments. Examples: --shift-heading-level-by=-1, --wrap=none, --columns=80">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-          </div>
-          <input type="text" id="extraArgs" class="input input-bordered input-xs font-mono" placeholder="--wrap=none">
-        </div>
-
-        <!-- Link Colors -->
-        <div class="flex items-center gap-3">
-          <label class="label py-0 cursor-pointer gap-1">
-            <input type="checkbox" id="colorLinks" class="checkbox checkbox-xs" checked>
-            <span class="label-text text-xs">Colored links</span>
-          </label>
-          <input type="color" id="linkColor" class="w-6 h-5 rounded cursor-pointer border-0" value="#0066cc">
-        </div>
-      </div>
-    </div>
-
-    <!-- Convert Button & Status -->
+    <!-- Tabs Section -->
     <div class="card bg-base-200 shadow">
-      <div class="card-body p-3 space-y-2">
+      <div class="card-body p-0">
+        <!-- Tab List -->
+        <div role="tablist" class="tabs tabs-lifted">
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Layout" checked />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-3">
+            <!-- LAYOUT TAB -->
+            <div class="space-y-3">
+              <!-- Paper Size, Orientation, Unit -->
+              <div class="grid grid-cols-3 gap-2">
+                <div class="form-control">
+                  <label class="label py-0"><span class="label-text text-xs">Size</span></label>
+                  <select id="paperSize" class="select select-bordered select-xs">
+                    <option value="a4" selected>A4</option>
+                    <option value="letter">Letter</option>
+                    <option value="a5">A5</option>
+                    <option value="legal">Legal</option>
+                  </select>
+                </div>
+                <div class="form-control">
+                  <label class="label py-0"><span class="label-text text-xs">Orientation</span></label>
+                  <select id="orientation" class="select select-bordered select-xs">
+                    <option value="portrait" selected>Portrait</option>
+                    <option value="landscape">Landscape</option>
+                  </select>
+                </div>
+                <div class="form-control">
+                  <label class="label py-0"><span class="label-text text-xs">Unit</span></label>
+                  <select id="marginUnit" class="select select-bordered select-xs">
+                    <option value="in" selected>inches</option>
+                    <option value="cm">cm</option>
+                    <option value="mm">mm</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Margins -->
+              <div class="divider my-2"></div>
+              <div class="flex items-center gap-2">
+                <label class="label py-0 cursor-pointer gap-1">
+                  <input type="checkbox" id="uniformMargins" class="checkbox checkbox-xs" checked>
+                  <span class="label-text text-xs">Uniform margins</span>
+                </label>
+              </div>
+
+              <div id="uniformMarginInput" class="form-control">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs w-20">All sides:</span>
+                  <input type="number" id="marginAll" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
+                </div>
+              </div>
+
+              <div id="individualMargins" class="grid grid-cols-2 gap-2 hidden">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs w-12">Top:</span>
+                  <input type="number" id="marginTop" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs w-12">Bottom:</span>
+                  <input type="number" id="marginBottom" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs w-12">Left:</span>
+                  <input type="number" id="marginLeft" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs w-12">Right:</span>
+                  <input type="number" id="marginRight" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
+                </div>
+              </div>
+
+              <!-- Line Height & Font Size -->
+              <div class="divider my-2"></div>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="form-control">
+                  <label class="label py-0"><span class="label-text text-xs">Font Size</span></label>
+                  <div class="flex gap-1">
+                    <input type="number" id="fontSize" class="input input-bordered input-xs flex-1" value="12" min="6" max="72" step="0.5">
+                    <span class="text-xs self-center">pt</span>
+                  </div>
+                </div>
+                <div class="form-control">
+                  <label class="label py-0"><span class="label-text text-xs">Line Height</span></label>
+                  <select id="lineHeight" class="select select-bordered select-xs">
+                    <option value="1">Single</option>
+                    <option value="1.15">1.15</option>
+                    <option value="1.5" selected>1.5</option>
+                    <option value="2">Double</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- PDF Engine (shown for PDF) -->
+              <div id="pdfEngineSection" class="hidden space-y-1">
+                <div class="divider my-2"></div>
+                <label class="label py-0"><span class="label-text text-xs">PDF Engine</span></label>
+                <select id="pdfEngine" class="select select-bordered select-xs w-full">
+                  <option value="tectonic" selected>Tectonic (emojis, auto-packages)</option>
+                  <option value="lualatex">LuaLaTeX (modern Unicode)</option>
+                  <option value="xelatex">XeLaTeX (custom fonts)</option>
+                  <option value="pdflatex">pdfLaTeX (classic)</option>
+                  <option value="weasyprint">WeasyPrint (HTML-based)</option>
+                </select>
+                <p class="text-xs text-base-content/60 mt-1">Tectonic recommended for emoji and multilingual support</p>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Typography" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-3">
+            <!-- TYPOGRAPHY TAB -->
+            <div class="space-y-3">
+              <div class="form-control">
+                <label class="label py-1"><span class="label-text text-sm font-medium">Main Font</span></label>
+                <select id="mainFont" class="select select-bordered select-sm">
+                  <option value="">System Default</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label py-1"><span class="label-text text-sm font-medium">Monospace Font</span></label>
+                <select id="monoFont" class="select select-bordered select-sm">
+                  <option value="">System Default</option>
+                </select>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <div class="form-control">
+                <label class="label py-1"><span class="label-text text-sm font-medium">Syntax Theme</span></label>
+                <select id="highlightTheme" class="select select-bordered select-sm w-full">
+                  <optgroup label="Light">
+                    <option value="pygments">Pygments</option>
+                    <option value="kate">Kate</option>
+                    <option value="tango">Tango</option>
+                    <option value="espresso">Espresso</option>
+                  </optgroup>
+                  <optgroup label="Dark">
+                    <option value="breezedark" selected>Breeze Dark</option>
+                    <option value="zenburn">Zenburn</option>
+                    <option value="nord">Nord</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="monokai">Monokai</option>
+                    <option value="gruvbox-dark">Gruvbox Dark</option>
+                    <option value="solarized-dark">Solarized Dark</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <!-- Code Preview -->
+              <div id="codePreview" class="rounded text-xs font-mono p-3 mt-2 overflow-hidden border border-base-300">
+                <div><span class="cm">// Greeting function</span></div>
+                <div><span class="kw">function</span> <span class="fn">hello</span>() {</div>
+                <div>  <span class="kw">const</span> msg = <span class="st">"Hello"</span>;</div>
+                <div>  <span class="kw">return</span> msg; <span class="cm">// result</span></div>
+                <div>}</div>
+              </div>
+
+              <div class="flex items-center gap-4 mt-2">
+                <label class="label py-0 cursor-pointer gap-1">
+                  <input type="checkbox" id="lineNumbers" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">Line numbers</span>
+                </label>
+                <label class="label py-0 cursor-pointer gap-1">
+                  <input type="checkbox" id="codeBlockBg" class="checkbox checkbox-xs" checked>
+                  <span class="label-text text-xs">Background</span>
+                </label>
+              </div>
+
+              <div id="bgColorPicker" class="flex items-center gap-2">
+                <span class="text-xs">Background color:</span>
+                <input type="color" id="codeBlockBgColor" class="w-10 h-8 rounded cursor-pointer border-0" value="#282a36">
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Document" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-3">
+            <!-- DOCUMENT TAB -->
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-2">
+                <label class="label py-1 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="titlePage" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">Title Page</span>
+                  <div class="tooltip tooltip-end" data-tip="Generate a separate title page with title, author, and date centered">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+                <label class="label py-1 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="lof" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">List of Figures</span>
+                  <div class="tooltip tooltip-end" data-tip="Generate a list of all figures with page numbers">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+                <label class="label py-1 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="toc" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">Table of Contents</span>
+                  <div class="tooltip tooltip-end" data-tip="Auto-generate a clickable table of contents from your headings">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+                <label class="label py-1 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="lot" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">List of Tables</span>
+                  <div class="tooltip tooltip-end" data-tip="Generate a list of all tables with page numbers">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+                <label class="label py-1 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="numberSections" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">Number Sections</span>
+                  <div class="tooltip tooltip-end" data-tip="Add numbers to headings: 1. Intro, 1.1 Background, 2. Methods...">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+                <label id="standaloneLabel" class="label py-1 cursor-pointer justify-start gap-2 hidden">
+                  <input type="checkbox" id="standalone" class="checkbox checkbox-xs" checked>
+                  <span class="label-text text-xs">Standalone</span>
+                  <div class="tooltip tooltip-end" data-tip="Create complete HTML file with doctype. Disable for fragment to embed elsewhere.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </label>
+              </div>
+
+              <!-- TOC Options -->
+              <div id="tocOptions" class="hidden space-y-2 pl-3 border-l-2 border-primary/30">
+                <div class="flex items-center gap-3">
+                  <span class="text-xs w-24">TOC Depth:</span>
+                  <input type="range" id="tocDepth" min="1" max="6" value="3" class="range range-xs range-primary flex-1">
+                  <span id="tocDepthValue" class="text-xs w-4">3</span>
+                </div>
+                <label class="label py-0 cursor-pointer justify-start gap-2">
+                  <input type="checkbox" id="tocNewPage" class="checkbox checkbox-xs">
+                  <span class="label-text text-xs">Content starts on new page after TOC</span>
+                </label>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Top-level division -->
+              <div class="form-control">
+                <div class="flex items-center gap-2">
+                  <span class="label-text text-xs">Top-level headings are:</span>
+                  <div class="tooltip tooltip-end" data-tip="What H1 becomes: Chapter (with page breaks), Section (no breaks), Part (major divisions)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </div>
+                <select id="topLevelDiv" class="select select-bordered select-xs w-full mt-1">
+                  <option value="default" selected>Default (based on document class)</option>
+                  <option value="part">Part</option>
+                  <option value="chapter">Chapter</option>
+                  <option value="section">Section</option>
+                </select>
+              </div>
+
+              <!-- Document Class -->
+              <div class="form-control">
+                <div class="flex items-center gap-2">
+                  <label class="label py-0"><span class="label-text text-xs">Document Class</span></label>
+                  <div class="tooltip tooltip-end" data-tip="LaTeX document classes define the overall layout: article (short docs), report (longer with chapters), book (two-sided printing), memoir (flexible), KOMA classes (European typography)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </div>
+                <select id="documentClass" class="select select-bordered select-xs">
+                  <option value="article">Article (short documents)</option>
+                  <option value="report">Report (chapters, longer docs)</option>
+                  <option value="book">Book (two-sided, chapters)</option>
+                  <option value="memoir">Memoir (flexible, advanced)</option>
+                  <option value="scrartcl">KOMA Article (European)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Content" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-3">
+            <!-- CONTENT TAB -->
+            <div class="space-y-3">
+              <!-- Header/Footer -->
+              <div class="space-y-2">
+                <h3 class="text-sm font-semibold">Header & Footer</h3>
+                <div class="text-xs bg-base-300 rounded p-2 mb-2">
+                  <div class="font-semibold mb-1">Available tokens:</div>
+                  <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-base-content/80">
+                    <span><code class="bg-base-100 px-1 rounded">{title}</code> Document title</span>
+                    <span><code class="bg-base-100 px-1 rounded">{author}</code> Author name</span>
+                    <span><code class="bg-base-100 px-1 rounded">{date}</code> Document date</span>
+                    <span><code class="bg-base-100 px-1 rounded">{page}</code> Current page</span>
+                    <span><code class="bg-base-100 px-1 rounded">{pages}</code> Total pages</span>
+                    <span><code class="bg-base-100 px-1 rounded">{chapter}</code> Chapter title</span>
+                    <span><code class="bg-base-100 px-1 rounded">{section}</code> Section title</span>
+                    <span><code class="bg-base-100 px-1 rounded">{file}</code> Filename</span>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Header Left</span></label>
+                    <input type="text" id="headerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{title}">
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Header Center</span></label>
+                    <input type="text" id="headerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="">
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Header Right</span></label>
+                    <input type="text" id="headerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{page}">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Footer Left</span></label>
+                    <input type="text" id="footerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{author}">
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Footer Center</span></label>
+                    <input type="text" id="footerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="Page {page} of {pages}">
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Footer Right</span></label>
+                    <input type="text" id="footerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{date}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Page Numbering -->
+              <div class="space-y-2">
+                <h3 class="text-sm font-semibold">Page Numbering</h3>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Format</span></label>
+                    <select id="pageNumberFormat" class="select select-bordered select-xs w-full">
+                      <option value="page" selected>Page N</option>
+                      <option value="page-of">Page N of X</option>
+                      <option value="number">N</option>
+                      <option value="number-of">N / X</option>
+                    </select>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Style</span></label>
+                    <select id="pageNumberStyle" class="select select-bordered select-xs w-full">
+                      <option value="arabic" selected>1, 2, 3</option>
+                      <option value="roman">i, ii, iii</option>
+                      <option value="Roman">I, II, III</option>
+                    </select>
+                  </div>
+                  <div class="form-control">
+                    <label class="label py-1"><span class="label-text text-xs">Position</span></label>
+                    <select id="pageNumberPosition" class="select select-bordered select-xs w-full">
+                      <option value="bottom-center" selected>Bottom Center</option>
+                      <option value="bottom-right">Bottom Right</option>
+                      <option value="top-right">Top Right</option>
+                      <option value="none">None</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Metadata -->
+              <div class="space-y-2">
+                <h3 class="text-sm font-semibold">Metadata</h3>
+                <div class="text-xs bg-base-300 rounded p-2 mb-2">
+                  <div class="font-semibold mb-1">Available tokens:</div>
+                  <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 text-base-content/80">
+                    <span><code class="bg-base-100 px-1 rounded">{today}</code> Today's date</span>
+                    <span><code class="bg-base-100 px-1 rounded">{year}</code> Current year</span>
+                    <span><code class="bg-base-100 px-1 rounded">{file}</code> Input filename</span>
+                    <span><code class="bg-base-100 px-1 rounded">{user}</code> System username</span>
+                  </div>
+                </div>
+
+                <div class="form-control">
+                  <label class="label py-1"><span class="label-text text-xs">Title</span></label>
+                  <input type="text" id="docTitle" class="input input-bordered input-xs w-full" placeholder="Document title or {file}">
+                </div>
+                <div class="form-control">
+                  <label class="label py-1"><span class="label-text text-xs">Author</span></label>
+                  <input type="text" id="docAuthor" class="input input-bordered input-xs w-full" placeholder="Author name or {user}">
+                </div>
+                <div class="form-control">
+                  <label class="label py-1"><span class="label-text text-xs">Date</span></label>
+                  <input type="text" id="docDate" class="input input-bordered input-xs w-full" placeholder="{today} or custom date">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Advanced" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-3">
+            <!-- ADVANCED TAB -->
+            <div class="space-y-3">
+              <!-- Mermaid Diagrams -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-semibold">Mermaid Diagrams</span>
+                  <span id="mermaidDetected" class="badge badge-xs badge-ghost hidden">detected</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <label class="label py-0 cursor-pointer gap-1">
+                    <input type="radio" name="mermaidFormat" value="svg" class="radio radio-xs" checked>
+                    <span class="label-text text-xs">SVG (vector)</span>
+                  </label>
+                  <label class="label py-0 cursor-pointer gap-1">
+                    <input type="radio" name="mermaidFormat" value="png" class="radio radio-xs">
+                    <span class="label-text text-xs">PNG (raster)</span>
+                  </label>
+                </div>
+                <p class="text-xs text-base-content/50">Mermaid diagrams are auto-detected and rendered</p>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Pandoc Filters -->
+              <div class="space-y-2">
+                <span class="text-sm font-semibold">Processing Filters</span>
+                <div class="flex flex-col gap-2">
+                  <label class="label py-0 cursor-pointer justify-start gap-2">
+                    <input type="checkbox" id="filterCrossref" class="checkbox checkbox-xs">
+                    <span class="label-text text-xs">pandoc-crossref</span>
+                    <div class="tooltip tooltip-end" data-tip="Enables cross-references: @fig:name for figures, @eq:name for equations, @sec:name for sections. Use {#fig:name} to label items.">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                  </label>
+                  <label class="label py-0 cursor-pointer justify-start gap-2">
+                    <input type="checkbox" id="filterCiteproc" class="checkbox checkbox-xs">
+                    <span class="label-text text-xs">citeproc (citations)</span>
+                    <div class="tooltip tooltip-end" data-tip="Process citations and bibliographies. Use [@key] to cite, requires a .bib file. Supports CSL styles for formatting.">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Extra Arguments -->
+              <div class="form-control">
+                <div class="flex items-center gap-2">
+                  <label class="label py-0"><span class="label-text text-xs">Extra Arguments</span></label>
+                  <div class="tooltip tooltip-end" data-tip="Additional pandoc command-line arguments. Examples: --shift-heading-level-by=-1, --wrap=none, --columns=80">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                </div>
+                <input type="text" id="extraArgs" class="input input-bordered input-xs font-mono" placeholder="--wrap=none">
+              </div>
+
+              <div class="divider my-2"></div>
+
+              <!-- Link Colors -->
+              <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                  <label class="label py-0 cursor-pointer gap-1">
+                    <input type="checkbox" id="colorLinks" class="checkbox checkbox-xs" checked>
+                    <span class="label-text text-xs">Colored links</span>
+                  </label>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs">Link color:</span>
+                  <input type="color" id="linkColor" class="w-10 h-8 rounded cursor-pointer border-0" value="#0066cc">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <input type="radio" name="optionTabs" role="tab" class="tab" aria-label="Preview" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 p-4 space-y-2">
+            <!-- PREVIEW TAB -->
+            <div class="space-y-2">
+              <h3 class="text-sm font-semibold">Pandoc Command</h3>
+              <code id="commandPreview" class="block p-3 bg-base-300 rounded text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words">pandoc input.md -o output.pdf</code>
+              <button id="copyCmd" class="btn btn-sm btn-outline">Copy to Clipboard</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Convert Section -->
+    <div class="card bg-base-200 shadow">
+      <div class="card-body p-4 space-y-3">
         <div class="flex gap-2">
-          <button id="convertBtn" class="btn btn-primary btn-sm flex-1 gap-2" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <button id="convertBtn" class="btn btn-primary btn-lg flex-1 gap-2" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             Convert
           </button>
-          <label class="label py-0 cursor-pointer gap-1 text-xs">
-            <input type="checkbox" id="openOnComplete" class="checkbox checkbox-xs" checked>
+          <label class="label py-0 cursor-pointer gap-1 text-xs self-center">
+            <input type="checkbox" id="openOnComplete" class="checkbox checkbox-sm" checked>
             <span>Open</span>
           </label>
         </div>
 
         <div id="statusArea" class="hidden">
-          <progress id="progressBar" class="progress progress-primary w-full h-1"></progress>
-          <p id="statusText" class="text-center text-xs mt-1"></p>
+          <progress id="progressBar" class="progress progress-primary w-full h-2"></progress>
+          <p id="statusText" class="text-center text-sm mt-2"></p>
         </div>
-
-        <!-- Command Preview -->
-        <details>
-          <summary class="text-xs cursor-pointer text-base-content/60">Command preview</summary>
-          <code id="commandPreview" class="block mt-1 p-2 bg-base-300 rounded text-xs font-mono overflow-x-auto whitespace-pre-wrap">pandoc input.md -o output.pdf</code>
-          <button id="copyCmd" class="btn btn-xs btn-ghost mt-1">Copy</button>
-        </details>
       </div>
     </div>
 
