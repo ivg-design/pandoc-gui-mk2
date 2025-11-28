@@ -308,8 +308,37 @@ function buildPandocCommand() {
 
     // Page numbering
     const pagePos = $('pageNumberPosition').value;
+    const pageFormat = $('pageNumberFormat').value;
     if (pagePos === 'none') {
       args.push('-V pagestyle=empty');
+    } else {
+      // Build page number string based on format
+      let pageNum;
+      switch (pageFormat) {
+        case 'page-of':
+          pageNum = 'Page \\\\thepage\\\\ of \\\\pageref{LastPage}';
+          args.push('-V header-includes="\\\\usepackage{lastpage}"');
+          break;
+        case 'number-of':
+          pageNum = '\\\\thepage\\\\ / \\\\pageref{LastPage}';
+          args.push('-V header-includes="\\\\usepackage{lastpage}"');
+          break;
+        case 'number':
+          pageNum = '\\\\thepage';
+          break;
+        default: // 'page'
+          pageNum = 'Page \\\\thepage';
+      }
+
+      // Apply position (if not using custom header/footer)
+      if (!hasHeader && !hasFooter && pagePos !== 'bottom-center') {
+        args.push('-V header-includes="\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}"');
+        if (pagePos === 'bottom-right') {
+          args.push(`-V header-includes="\\\\rfoot{${pageNum}}"`);
+        } else if (pagePos === 'top-right') {
+          args.push(`-V header-includes="\\\\rhead{${pageNum}}"`);
+        }
+      }
     }
 
     // Link colors

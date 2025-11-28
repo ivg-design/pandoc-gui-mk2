@@ -190,15 +190,22 @@
           <input type="text" id="footerRight" class="input input-bordered input-xs" placeholder="">
         </div>
         <div class="divider my-1 text-xs">Page Numbering</div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-2">
+          <div class="form-control">
+            <label class="label py-0"><span class="label-text text-xs">Format</span></label>
+            <select id="pageNumberFormat" class="select select-bordered select-xs">
+              <option value="page" selected>Page N</option>
+              <option value="page-of">Page N of X</option>
+              <option value="number">N</option>
+              <option value="number-of">N / X</option>
+            </select>
+          </div>
           <div class="form-control">
             <label class="label py-0"><span class="label-text text-xs">Style</span></label>
             <select id="pageNumberStyle" class="select select-bordered select-xs">
-              <option value="arabic" selected>1, 2, 3...</option>
-              <option value="roman">i, ii, iii...</option>
-              <option value="Roman">I, II, III...</option>
-              <option value="alph">a, b, c...</option>
-              <option value="Alph">A, B, C...</option>
+              <option value="arabic" selected>1, 2, 3</option>
+              <option value="roman">i, ii, iii</option>
+              <option value="Roman">I, II, III</option>
             </select>
           </div>
           <div class="form-control">
@@ -207,7 +214,7 @@
               <option value="bottom-center" selected>Bottom Center</option>
               <option value="bottom-right">Bottom Right</option>
               <option value="top-right">Top Right</option>
-              <option value="none">No Numbers</option>
+              <option value="none">None</option>
             </select>
           </div>
         </div>
