@@ -44,6 +44,10 @@ const themeColors = {
   'monokai': { bg: '#272822', kw: '#f92672', fn: '#a6e22e', st: '#e6db74', cm: '#75715e' },
   'gruvbox-dark': { bg: '#282828', kw: '#fb4934', fn: '#b8bb26', st: '#fabd2f', cm: '#928374' },
   'solarized-dark': { bg: '#002b36', kw: '#859900', fn: '#268bd2', st: '#2aa198', cm: '#586e75' },
+  'vim': { bg: '#1e1e1e', kw: '#569cd6', fn: '#dcdcdc', st: '#ce9178', cm: '#6a9955' },
+  'one-dark': { bg: '#282c34', kw: '#61afef', fn: '#e06c75', st: '#98c379', cm: '#7f848e' },
+  'github-dark': { bg: '#0d1117', kw: '#79c0ff', fn: '#d1a97f', st: '#a371f7', cm: '#8b949e' },
+  'atom-one-light': { bg: '#fafafa', kw: '#0184bc', fn: '#4078f2', st: '#50a14f', cm: '#a0a1a7' },
 };
 
 // DOM Elements
@@ -51,17 +55,33 @@ const $ = id => document.getElementById(id);
 
 // Theme Management
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
+  const savedTheme = localStorage.getItem('appTheme') || 'dim';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  $('themeToggle').checked = savedTheme === 'light';
+  setupThemeDropdown();
+}
+
+function setupThemeDropdown() {
+  const themeButtons = document.querySelectorAll('[data-theme]');
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const theme = btn.getAttribute('data-theme');
+      setTheme(theme);
+    });
+  });
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('appTheme', theme);
+  updateCodePreview();
+  updateCommandPreview();
 }
 
 function toggleTheme() {
-  const newTheme = $('themeToggle').checked ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
-  updateCodePreview();
-  updateCommandPreview();
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dim' : 'light';
+  setTheme(newTheme);
+  $('themeToggle').checked = newTheme === 'light';
 }
 
 // Dependency Checker
@@ -722,6 +742,18 @@ function setupPresets() {
       applySettings(presets[name]);
       showToast(`Preset "${name}" loaded`, 'success');
     }
+  });
+
+  $('updatePreset').addEventListener('click', () => {
+    const name = $('presetSelect').value;
+    if (!name) {
+      showToast('Select a preset first', 'warning');
+      return;
+    }
+    const presets = getPresets();
+    presets[name] = getCurrentSettings();
+    savePresets(presets);
+    showToast(`Preset "${name}" updated`, 'success');
   });
 
   $('deletePreset').addEventListener('click', () => {

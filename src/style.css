@@ -20,81 +20,149 @@
   background: oklch(var(--bc) / 0.5);
 }
 
-/* Panel styling */
-.panel {
-  @apply bg-base-200 rounded-lg p-4;
+/* Tab styling with tabs-box */
+.tabs.tabs-box {
+  border-bottom: 2px solid oklch(var(--bc) / 0.1);
 }
 
-/* File drop zone */
-.drop-zone {
-  @apply border-2 border-dashed border-base-content/30 rounded-lg p-8 text-center transition-all;
+.tabs.tabs-box .tab {
+  @apply border-b-2 border-transparent px-4 py-2 font-medium text-sm;
+  transition: all 0.2s ease;
 }
 
-.drop-zone:hover,
-.drop-zone.drag-over {
-  @apply border-primary bg-primary/10;
+.tabs.tabs-box .tab:hover {
+  @apply border-b-primary/50 bg-base-content/5;
 }
 
-/* Status indicator */
-.status-dot {
-  @apply w-2 h-2 rounded-full inline-block mr-2;
+.tabs.tabs-box .tab[aria-selected="true"],
+.tabs.tabs-box .tab:checked {
+  @apply border-b-primary text-primary bg-transparent;
 }
 
-.status-dot.success { @apply bg-success; }
-.status-dot.error { @apply bg-error; }
-.status-dot.warning { @apply bg-warning; }
-.status-dot.info { @apply bg-info; }
-
-/* Command preview */
-.command-preview {
-  @apply font-mono text-sm bg-base-300 p-3 rounded overflow-x-auto whitespace-pre-wrap break-all;
+.tab-content {
+  @apply rounded-none;
 }
 
-/* Tooltip improvements */
+/* Fixed tab height to prevent resizing */
+.tab-content {
+  min-height: 600px;
+  max-height: 600px;
+}
+
+/* Tooltip improvements - larger and more visible */
+.tooltip {
+  @apply font-semibold text-xs;
+}
+
 .tooltip::before {
-  max-width: 280px;
+  max-width: 320px;
   white-space: normal;
   text-align: left;
   font-size: 0.75rem;
-  line-height: 1.3;
+  line-height: 1.4;
+  padding: 0.5rem;
 }
 
-/* Tooltips in tab content */
-.tab-content .tooltip {
-  position: relative;
-  z-index: 50;
+.tooltip[data-tip] {
+  @apply tooltip-right;
 }
 
-/* Compact form controls */
+.tooltip-right::before {
+  @apply bg-primary text-primary-content;
+}
+
+/* Info icon styling */
+.text-info.cursor-help {
+  @apply cursor-help hover:scale-125 transition-transform;
+}
+
+/* Code preview styling */
+#codePreview {
+  border: 1px solid oklch(var(--bc) / 0.1);
+  line-height: 1.4;
+  min-height: 120px;
+}
+
+/* Form control compact spacing */
 .form-control .label {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
 
-/* Code preview */
-#codePreview {
-  border: 1px solid oklch(var(--bc) / 0.1);
-  line-height: 1.4;
+/* Dropdown styling */
+.dropdown-content {
+  @apply bg-base-300 border border-base-content/10;
 }
 
-/* Tab styling */
-.tabs {
-  border-bottom: none !important;
+.dropdown-content li a {
+  @apply px-3 py-2 rounded text-sm;
 }
 
-.tab {
-  @apply bg-base-300 text-base-content font-medium;
+.dropdown-content li a:hover {
+  @apply bg-primary/10 text-primary;
 }
 
-.tab:hover {
-  @apply bg-base-content/10;
+/* Preset buttons styling */
+.btn-outline:hover {
+  @apply border-primary text-primary;
 }
 
-.tab[aria-selected="true"],
-.tab:checked {
-  @apply bg-base-100 text-base-content border-b-2 border-primary;
+/* Command preview scrollable area */
+#commandPreview {
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-.tab-content {
-  @apply rounded-b-lg;
+/* Grid layout optimizations */
+.grid {
+  @apply gap-2;
+}
+
+/* Divider styling */
+.divider {
+  @apply my-2 opacity-30;
+}
+
+/* Status area */
+#statusArea {
+  @apply p-3 bg-base-300/50 rounded;
+}
+
+/* Progress bar */
+.progress {
+  height: 0.5rem;
+}
+
+/* Token reference box */
+.text-xs.bg-base-300 {
+  @apply border border-base-content/10;
+}
+
+/* Checkbox and radio sizes */
+.checkbox-xs,
+.radio-xs {
+  @apply h-3 w-3;
+}
+
+.checkbox-sm,
+.radio-sm {
+  @apply h-4 w-4;
+}
+
+/* Input sizing */
+.input-xs {
+  @apply h-8 text-xs;
+}
+
+.select-xs {
+  @apply h-8 text-xs;
+}
+
+/* Label text sizing */
+.label-text {
+  @apply text-sm;
+}
+
+.label-text-alt {
+  @apply text-xs;
 }
