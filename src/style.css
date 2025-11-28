@@ -51,7 +51,33 @@
 }
 
 /* Tooltip improvements */
-.tooltip-info::before {
-  max-width: 300px;
+.tooltip::before {
+  max-width: 280px;
   white-space: normal;
+  text-align: left;
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
+
+/* Collapse tweaks */
+.collapse-title {
+  min-height: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.collapse-content {
+  padding-top: 0 !important;
+}
+
+/* Compact form controls */
+.form-control .label {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Code preview */
+#codePreview {
+  border: 1px solid oklch(var(--bc) / 0.1);
+  line-height: 1.4;
 }

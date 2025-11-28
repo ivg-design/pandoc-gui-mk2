@@ -3,146 +3,228 @@
 // State
 let inputFilePath = null;
 let inputFileName = null;
+let inputFileContent = null;
+let systemFonts = [];
+let monoFonts = [];
+
+// Code theme colors for preview
+const themeColors = {
+  'pygments': { bg: '#f8f8f8', kw: '#008000', fn: '#0000ff', st: '#ba2121' },
+  'kate': { bg: '#ffffff', kw: '#1f1c1b', fn: '#644a9b', st: '#bf0303' },
+  'tango': { bg: '#f8f8f8', kw: '#204a87', fn: '#000000', st: '#4e9a06' },
+  'espresso': { bg: '#2a211c', kw: '#43a8ed', fn: '#ff9d00', st: '#049b0a' },
+  'breezedark': { bg: '#232629', kw: '#cfcfc2', fn: '#8e44ad', st: '#f44f4f' },
+  'zenburn': { bg: '#3f3f3f', kw: '#f0dfaf', fn: '#efef8f', st: '#cc9393' },
+  'nord': { bg: '#2e3440', kw: '#81a1c1', fn: '#88c0d0', st: '#a3be8c' },
+  'dracula': { bg: '#282a36', kw: '#ff79c6', fn: '#50fa7b', st: '#f1fa8c' },
+  'monokai': { bg: '#272822', kw: '#f92672', fn: '#a6e22e', st: '#e6db74' },
+  'gruvbox-dark': { bg: '#282828', kw: '#fb4934', fn: '#b8bb26', st: '#fabd2f' },
+  'solarized-dark': { bg: '#002b36', kw: '#859900', fn: '#268bd2', st: '#2aa198' },
+};
 
 // DOM Elements
-const elements = {
-  themeToggle: document.getElementById('themeToggle'),
-  dropZone: document.getElementById('dropZone'),
-  inputFile: document.getElementById('inputFile'),
-  inputFileInfo: document.getElementById('inputFileInfo'),
-  inputFileName: document.getElementById('inputFileName'),
-  clearInput: document.getElementById('clearInput'),
-  outputFormat: document.getElementById('outputFormat'),
-  outputFilename: document.getElementById('outputFilename'),
-  convertBtn: document.getElementById('convertBtn'),
-  statusArea: document.getElementById('statusArea'),
-  progressBar: document.getElementById('progressBar'),
-  statusText: document.getElementById('statusText'),
-  commandPreview: document.getElementById('commandPreview'),
-  copyCmd: document.getElementById('copyCmd'),
-  pdfEngineSection: document.getElementById('pdfEngineSection'),
-  pdfEngine: document.getElementById('pdfEngine'),
-  paperSize: document.getElementById('paperSize'),
-  orientation: document.getElementById('orientation'),
-  marginTop: document.getElementById('marginTop'),
-  marginBottom: document.getElementById('marginBottom'),
-  marginLeft: document.getElementById('marginLeft'),
-  marginRight: document.getElementById('marginRight'),
-  mainFont: document.getElementById('mainFont'),
-  fontSize: document.getElementById('fontSize'),
-  monoFont: document.getElementById('monoFont'),
-  lineHeight: document.getElementById('lineHeight'),
-  highlightTheme: document.getElementById('highlightTheme'),
-  lineNumbers: document.getElementById('lineNumbers'),
-  codeBlockBg: document.getElementById('codeBlockBg'),
-  toc: document.getElementById('toc'),
-  tocDepthSection: document.getElementById('tocDepthSection'),
-  tocDepth: document.getElementById('tocDepth'),
-  numberSections: document.getElementById('numberSections'),
-  standalone: document.getElementById('standalone'),
-  docTitle: document.getElementById('docTitle'),
-  docAuthor: document.getElementById('docAuthor'),
-  docDate: document.getElementById('docDate'),
-  filterMermaid: document.getElementById('filterMermaid'),
-  filterCrossref: document.getElementById('filterCrossref'),
-  filterCiteproc: document.getElementById('filterCiteproc'),
-  customVars: document.getElementById('customVars'),
-  extraArgs: document.getElementById('extraArgs'),
-  inputFormat: document.getElementById('inputFormat'),
-  documentClass: document.getElementById('documentClass'),
-  colorLinks: document.getElementById('colorLinks'),
-  linkColor: document.getElementById('linkColor'),
-  pdfAdvanced: document.getElementById('pdfAdvanced'),
-  toastContainer: document.getElementById('toastContainer'),
-};
+const $ = id => document.getElementById(id);
 
 // Theme Management
 function initTheme() {
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  elements.themeToggle.checked = savedTheme === 'light';
+  $('themeToggle').checked = savedTheme === 'light';
 }
 
 function toggleTheme() {
-  const newTheme = elements.themeToggle.checked ? 'light' : 'dark';
+  const newTheme = $('themeToggle').checked ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
-
-  // Sync highlight theme with UI theme
-  if (newTheme === 'light' && elements.highlightTheme.value.includes('dark')) {
-    elements.highlightTheme.value = 'pygments';
-  } else if (newTheme === 'dark' && !elements.highlightTheme.value.includes('dark') &&
-             elements.highlightTheme.value !== 'zenburn' && elements.highlightTheme.value !== 'nord') {
-    elements.highlightTheme.value = 'breezedark';
-  }
+  updateCodePreview();
   updateCommandPreview();
+}
+
+// System Fonts
+async function loadSystemFonts() {
+  try {
+    // Use Local Font Access API if available (Tauri/Chrome)
+    if ('queryLocalFonts' in window) {
+      const fonts = await window.queryLocalFonts();
+      const fontSet = new Set();
+      const monoSet = new Set();
+
+      fonts.forEach(font => {
+        fontSet.add(font.family);
+        // Heuristic for mono fonts
+        const name = font.family.toLowerCase();
+        if (name.includes('mono') || name.includes('code') || name.includes('consola') ||
+            name.includes('courier') || name.includes('menlo') || name.includes('fira code') ||
+            name.includes('source code') || name.includes('jetbrains') || name.includes('hack')) {
+          monoSet.add(font.family);
+        }
+      });
+
+      systemFonts = [...fontSet].sort();
+      monoFonts = [...monoSet].sort();
+    } else {
+      // Fallback common fonts
+      systemFonts = ['Arial', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana', 'Palatino', 'Garamond'];
+      monoFonts = ['Courier New', 'Menlo', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code', 'JetBrains Mono'];
+    }
+
+    populateFontDropdowns();
+  } catch (e) {
+    console.log('Font access not available:', e);
+    // Use fallback fonts
+    systemFonts = ['Arial', 'Georgia', 'Helvetica', 'Times New Roman', 'Verdana'];
+    monoFonts = ['Courier New', 'Menlo', 'Monaco', 'Consolas'];
+    populateFontDropdowns();
+  }
+}
+
+function populateFontDropdowns() {
+  const mainFontSelect = $('mainFont');
+  const monoFontSelect = $('monoFont');
+
+  // Main fonts
+  systemFonts.forEach(font => {
+    const opt = document.createElement('option');
+    opt.value = font;
+    opt.textContent = font;
+    mainFontSelect.appendChild(opt);
+  });
+
+  // Mono fonts only
+  monoFonts.forEach(font => {
+    const opt = document.createElement('option');
+    opt.value = font;
+    opt.textContent = font;
+    monoFontSelect.appendChild(opt);
+  });
 }
 
 // File Handling
 function setupFileHandling() {
-  elements.dropZone.addEventListener('click', () => elements.inputFile.click());
+  $('browseInput').addEventListener('click', () => $('inputFile').click());
 
-  elements.dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    elements.dropZone.classList.add('drag-over');
-  });
-
-  elements.dropZone.addEventListener('dragleave', () => {
-    elements.dropZone.classList.remove('drag-over');
-  });
-
-  elements.dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    elements.dropZone.classList.remove('drag-over');
-    if (e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  });
-
-  elements.inputFile.addEventListener('change', (e) => {
+  $('inputFile').addEventListener('change', async (e) => {
     if (e.target.files.length > 0) {
-      handleFileSelect(e.target.files[0]);
+      await handleFileSelect(e.target.files[0]);
     }
   });
 
-  elements.clearInput.addEventListener('click', clearInputFile);
+  $('browseOutput').addEventListener('click', () => {
+    // In web mode, just allow editing the path
+    // In Tauri, this would open a save dialog
+    if (window.__TAURI__) {
+      // Tauri save dialog
+    }
+  });
+
+  // Allow editing output path
+  $('outputPath').addEventListener('input', updateCommandPreview);
 }
 
-function handleFileSelect(file) {
+async function handleFileSelect(file) {
   inputFileName = file.name;
   inputFilePath = file.path || file.name;
 
-  elements.inputFileName.textContent = file.name;
-  elements.inputFileInfo.classList.remove('hidden');
-  elements.dropZone.classList.add('hidden');
+  $('inputPath').value = inputFilePath;
 
-  // Auto-set output filename
+  // Auto-set output path (same location, same name)
   const baseName = file.name.replace(/\.[^/.]+$/, '');
-  elements.outputFilename.value = baseName;
+  const dir = inputFilePath.substring(0, inputFilePath.lastIndexOf('/') + 1);
+  $('outputPath').value = dir + baseName;
 
-  elements.convertBtn.disabled = false;
+  // Read file content for mermaid detection
+  try {
+    inputFileContent = await file.text();
+    detectMermaid(inputFileContent);
+  } catch (e) {
+    inputFileContent = null;
+  }
+
+  $('convertBtn').disabled = false;
   updateCommandPreview();
 }
 
-function clearInputFile() {
-  inputFilePath = null;
-  inputFileName = null;
-  elements.inputFile.value = '';
-  elements.inputFileName.textContent = '';
-  elements.inputFileInfo.classList.add('hidden');
-  elements.dropZone.classList.remove('hidden');
-  elements.convertBtn.disabled = true;
-  updateCommandPreview();
+function detectMermaid(content) {
+  const hasMermaid = /```mermaid/i.test(content);
+  $('mermaidDetected').classList.toggle('hidden', !hasMermaid);
+}
+
+// Margin handling
+function setupMargins() {
+  $('uniformMargins').addEventListener('change', () => {
+    const uniform = $('uniformMargins').checked;
+    $('uniformMarginInput').classList.toggle('hidden', !uniform);
+    $('individualMargins').classList.toggle('hidden', uniform);
+    updateCommandPreview();
+  });
+
+  $('marginAll').addEventListener('input', () => {
+    const val = $('marginAll').value;
+    $('marginTop').value = val;
+    $('marginBottom').value = val;
+    $('marginLeft').value = val;
+    $('marginRight').value = val;
+    updateCommandPreview();
+  });
+}
+
+// Code Preview
+function updateCodePreview() {
+  const theme = $('highlightTheme').value;
+  const colors = themeColors[theme] || themeColors['breezedark'];
+  const preview = $('codePreview');
+  const bgColor = $('codeBlockBg').checked ? ($('codeBlockBgColor').value || colors.bg) : 'transparent';
+
+  preview.style.backgroundColor = bgColor;
+  preview.querySelectorAll('.kw').forEach(el => el.style.color = colors.kw);
+  preview.querySelectorAll('.fn').forEach(el => el.style.color = colors.fn);
+  preview.querySelectorAll('.st').forEach(el => el.style.color = colors.st);
+
+  // Set text color based on background brightness
+  const isLightTheme = ['pygments', 'kate', 'tango'].includes(theme);
+  preview.style.color = isLightTheme ? '#333' : '#ddd';
+
+  // Update bg color picker to match theme default
+  if (!$('codeBlockBgColor').dataset.userSet) {
+    $('codeBlockBgColor').value = colors.bg;
+  }
+}
+
+function setupCodePreview() {
+  $('highlightTheme').addEventListener('change', () => {
+    $('codeBlockBgColor').dataset.userSet = '';
+    updateCodePreview();
+    updateCommandPreview();
+  });
+
+  $('codeBlockBg').addEventListener('change', () => {
+    $('bgColorPicker').classList.toggle('hidden', !$('codeBlockBg').checked);
+    updateCodePreview();
+  });
+
+  $('codeBlockBgColor').addEventListener('input', () => {
+    $('codeBlockBgColor').dataset.userSet = 'true';
+    updateCodePreview();
+  });
+
+  updateCodePreview();
 }
 
 // Output Format Handling
 function setupFormatHandling() {
-  elements.outputFormat.addEventListener('change', () => {
-    const format = elements.outputFormat.value;
-    const isPdf = format === 'pdf' || format === 'beamer';
+  $('outputFormat').addEventListener('change', () => {
+    const format = $('outputFormat').value;
+    const isPdf = format === 'pdf';
 
-    elements.pdfEngineSection.style.display = isPdf ? 'block' : 'none';
-    elements.pdfAdvanced.style.display = isPdf ? 'block' : 'none';
+    $('pdfEngineSection').classList.toggle('hidden', !isPdf);
+    $('docClassSection').classList.toggle('hidden', !isPdf);
+
+    // Update output path extension
+    const outputPath = $('outputPath').value;
+    if (outputPath) {
+      const basePath = outputPath.replace(/\.[^/.]+$/, '');
+      $('outputPath').value = basePath + '.' + getExtensionForFormat(format);
+    }
 
     updateCommandPreview();
   });
@@ -150,8 +232,13 @@ function setupFormatHandling() {
 
 // TOC Toggle
 function setupTocHandling() {
-  elements.toc.addEventListener('change', () => {
-    elements.tocDepthSection.classList.toggle('hidden', !elements.toc.checked);
+  $('toc').addEventListener('change', () => {
+    $('tocDepthSection').classList.toggle('hidden', !$('toc').checked);
+    updateCommandPreview();
+  });
+
+  $('tocDepth').addEventListener('input', () => {
+    $('tocDepthValue').textContent = $('tocDepth').value;
     updateCommandPreview();
   });
 }
@@ -161,127 +248,146 @@ function buildPandocCommand() {
   const args = ['pandoc'];
 
   // Input file
-  const input = inputFileName || 'input.md';
+  const input = inputFilePath || 'input.md';
   args.push(`"${input}"`);
 
-  // Input format override
-  if (elements.inputFormat.value !== 'auto') {
-    args.push(`-f ${elements.inputFormat.value}`);
-  }
-
   // Output format
-  const format = elements.outputFormat.value;
+  const format = $('outputFormat').value;
   args.push(`-t ${format}`);
 
   // Output file
-  const outputName = elements.outputFilename.value || 'output';
+  const outputPath = $('outputPath').value || 'output';
   const ext = getExtensionForFormat(format);
-  args.push(`-o "${outputName}.${ext}"`);
+  const finalOutput = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
+  args.push(`-o "${finalOutput}"`);
 
   // Standalone
-  if (elements.standalone.checked) {
+  if ($('standalone').checked) {
     args.push('-s');
   }
 
-  // PDF Engine
-  const isPdf = format === 'pdf' || format === 'beamer';
+  // PDF-specific options
+  const isPdf = format === 'pdf';
   if (isPdf) {
-    args.push(`--pdf-engine=${elements.pdfEngine.value}`);
+    args.push(`--pdf-engine=${$('pdfEngine').value}`);
+    args.push(`-V documentclass=${$('documentClass').value}`);
+    args.push(`-V papersize=${$('paperSize').value}`);
 
-    // Document class
-    args.push(`-V documentclass=${elements.documentClass.value}`);
-
-    // Page size
-    args.push(`-V papersize=${elements.paperSize.value}`);
-
-    // Orientation
-    if (elements.orientation.value === 'landscape') {
+    if ($('orientation').value === 'landscape') {
       args.push('-V geometry:landscape');
     }
 
     // Margins
+    const unit = $('marginUnit').value;
     const margins = [];
-    if (elements.marginTop.value) margins.push(`top=${elements.marginTop.value}`);
-    if (elements.marginBottom.value) margins.push(`bottom=${elements.marginBottom.value}`);
-    if (elements.marginLeft.value) margins.push(`left=${elements.marginLeft.value}`);
-    if (elements.marginRight.value) margins.push(`right=${elements.marginRight.value}`);
+    if ($('uniformMargins').checked) {
+      const m = $('marginAll').value;
+      margins.push(`margin=${m}${unit}`);
+    } else {
+      if ($('marginTop').value) margins.push(`top=${$('marginTop').value}${unit}`);
+      if ($('marginBottom').value) margins.push(`bottom=${$('marginBottom').value}${unit}`);
+      if ($('marginLeft').value) margins.push(`left=${$('marginLeft').value}${unit}`);
+      if ($('marginRight').value) margins.push(`right=${$('marginRight').value}${unit}`);
+    }
     if (margins.length > 0) {
       args.push(`-V geometry:${margins.join(',')}`);
     }
 
-    // Colored links
-    if (elements.colorLinks.checked) {
+    // Header/Footer (via fancyhdr)
+    const hasHeader = $('headerLeft').value || $('headerCenter').value || $('headerRight').value;
+    const hasFooter = $('footerLeft').value || $('footerCenter').value || $('footerRight').value;
+    if (hasHeader || hasFooter) {
+      args.push('-V header-includes="\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}"');
+      if ($('headerLeft').value) args.push(`-V header-includes="\\\\lhead{${$('headerLeft').value}}"`);
+      if ($('headerCenter').value) args.push(`-V header-includes="\\\\chead{${$('headerCenter').value}}"`);
+      if ($('headerRight').value) args.push(`-V header-includes="\\\\rhead{${$('headerRight').value}}"`);
+      if ($('footerLeft').value) args.push(`-V header-includes="\\\\lfoot{${$('footerLeft').value}}"`);
+      if ($('footerCenter').value) args.push(`-V header-includes="\\\\cfoot{${$('footerCenter').value}}"`);
+      if ($('footerRight').value) args.push(`-V header-includes="\\\\rfoot{${$('footerRight').value}}"`);
+    }
+
+    // Page numbering
+    const pagePos = $('pageNumberPosition').value;
+    if (pagePos === 'none') {
+      args.push('-V pagestyle=empty');
+    }
+
+    // Link colors
+    if ($('colorLinks').checked) {
       args.push('-V colorlinks=true');
-      const color = elements.linkColor.value.replace('#', '');
+      const color = $('linkColor').value.replace('#', '');
       args.push(`-V linkcolor=[HTML]{${color}}`);
       args.push(`-V urlcolor=[HTML]{${color}}`);
     }
   }
 
   // Typography
-  if (elements.mainFont.value) {
-    args.push(`-V mainfont="${elements.mainFont.value}"`);
+  if ($('mainFont').value) {
+    args.push(`-V mainfont="${$('mainFont').value}"`);
   }
-  if (elements.monoFont.value) {
-    args.push(`-V monofont="${elements.monoFont.value}"`);
+  if ($('monoFont').value) {
+    args.push(`-V monofont="${$('monoFont').value}"`);
   }
-  if (elements.fontSize.value !== '12pt') {
-    args.push(`-V fontsize=${elements.fontSize.value}`);
+  const fontSize = $('fontSize').value;
+  if (fontSize && fontSize !== '12') {
+    args.push(`-V fontsize=${fontSize}pt`);
   }
-  if (elements.lineHeight.value !== '1.5') {
-    args.push(`-V linestretch=${elements.lineHeight.value}`);
+  if ($('lineHeight').value !== '1.5') {
+    args.push(`-V linestretch=${$('lineHeight').value}`);
   }
 
   // Code highlighting
-  args.push(`--highlight-style=${elements.highlightTheme.value}`);
+  args.push(`--highlight-style=${$('highlightTheme').value}`);
+
+  // Output theme (for HTML)
+  const outputTheme = $('outputTheme').value;
+  if (format === 'html' && outputTheme !== 'auto') {
+    // Could add CSS variables or theme class
+  }
 
   // TOC
-  if (elements.toc.checked) {
+  if ($('toc').checked) {
     args.push('--toc');
-    args.push(`--toc-depth=${elements.tocDepth.value}`);
+    args.push(`--toc-depth=${$('tocDepth').value}`);
   }
 
   // Number sections
-  if (elements.numberSections.checked) {
+  if ($('numberSections').checked) {
     args.push('-N');
   }
 
   // Metadata
-  if (elements.docTitle.value) {
-    args.push(`-M title="${elements.docTitle.value}"`);
+  if ($('docTitle').value) {
+    args.push(`-M title="${$('docTitle').value}"`);
   }
-  if (elements.docAuthor.value) {
-    args.push(`-M author="${elements.docAuthor.value}"`);
+  if ($('docAuthor').value) {
+    args.push(`-M author="${$('docAuthor').value}"`);
   }
-  if (elements.docDate.value) {
-    args.push(`-M date="${elements.docDate.value}"`);
+  if ($('docDate').value) {
+    args.push(`-M date="${$('docDate').value}"`);
   }
 
-  // Filters
-  if (elements.filterMermaid.checked) {
+  // Mermaid filter (auto-enabled if detected)
+  const hasMermaid = !$('mermaidDetected').classList.contains('hidden');
+  if (hasMermaid) {
+    const mermaidFormat = document.querySelector('input[name="mermaidFormat"]:checked').value;
     args.push('-F mermaid-filter');
+    if (mermaidFormat === 'svg') {
+      args.push('-M mermaid-format=svg');
+    }
   }
-  if (elements.filterCrossref.checked) {
+
+  // Other filters
+  if ($('filterCrossref').checked) {
     args.push('-F pandoc-crossref');
   }
-  if (elements.filterCiteproc.checked) {
+  if ($('filterCiteproc').checked) {
     args.push('--citeproc');
   }
 
-  // Custom variables
-  const customVars = elements.customVars.value.trim();
-  if (customVars) {
-    customVars.split('\n').forEach(line => {
-      const [key, val] = line.split('=');
-      if (key && val) {
-        args.push(`-V ${key.trim()}=${val.trim()}`);
-      }
-    });
-  }
-
   // Extra arguments
-  if (elements.extraArgs.value.trim()) {
-    args.push(elements.extraArgs.value.trim());
+  if ($('extraArgs').value.trim()) {
+    args.push($('extraArgs').value.trim());
   }
 
   return args.join(' \\\n  ');
@@ -289,41 +395,26 @@ function buildPandocCommand() {
 
 function getExtensionForFormat(format) {
   const extensions = {
-    pdf: 'pdf',
-    docx: 'docx',
-    odt: 'odt',
-    rtf: 'rtf',
-    html: 'html',
-    html5: 'html',
-    pptx: 'pptx',
-    beamer: 'pdf',
-    revealjs: 'html',
-    markdown: 'md',
-    gfm: 'md',
-    rst: 'rst',
-    asciidoc: 'adoc',
-    org: 'org',
-    latex: 'tex',
-    epub: 'epub',
-    epub3: 'epub',
-    plain: 'txt',
+    pdf: 'pdf', docx: 'docx', odt: 'odt', html: 'html',
+    epub: 'epub', latex: 'tex', pptx: 'pptx',
+    markdown: 'md', rst: 'rst', plain: 'txt',
   };
   return extensions[format] || format;
 }
 
 function updateCommandPreview() {
-  elements.commandPreview.textContent = buildPandocCommand();
+  $('commandPreview').textContent = buildPandocCommand();
 }
 
 // Copy Command
 function setupCopyCommand() {
-  elements.copyCmd.addEventListener('click', async () => {
-    const cmd = elements.commandPreview.textContent;
+  $('copyCmd').addEventListener('click', async () => {
+    const cmd = $('commandPreview').textContent;
     try {
       await navigator.clipboard.writeText(cmd.replace(/\\\n\s+/g, ' '));
-      showToast('Command copied to clipboard', 'success');
+      showToast('Copied!', 'success');
     } catch (err) {
-      showToast('Failed to copy command', 'error');
+      showToast('Failed to copy', 'error');
     }
   });
 }
@@ -331,87 +422,72 @@ function setupCopyCommand() {
 // Toast Notifications
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
-  toast.className = `alert alert-${type} shadow-lg`;
+  toast.className = `alert alert-${type} py-2 px-3 text-sm`;
   toast.innerHTML = `<span>${message}</span>`;
-  elements.toastContainer.appendChild(toast);
-
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
+  $('toastContainer').appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
-// Conversion (Tauri integration placeholder)
+// Conversion
 function setupConversion() {
-  elements.convertBtn.addEventListener('click', async () => {
+  $('convertBtn').addEventListener('click', async () => {
     if (!inputFilePath) {
-      showToast('Please select an input file', 'warning');
+      showToast('Select an input file', 'warning');
       return;
     }
 
-    elements.statusArea.classList.remove('hidden');
-    elements.progressBar.classList.add('progress-primary');
-    elements.statusText.textContent = 'Converting...';
-    elements.convertBtn.disabled = true;
+    $('statusArea').classList.remove('hidden');
+    $('statusText').textContent = 'Converting...';
+    $('convertBtn').disabled = true;
 
     try {
-      // Check if running in Tauri
       if (window.__TAURI__) {
         const { invoke } = window.__TAURI__.core;
         const command = buildPandocCommand().replace(/\\\n\s+/g, ' ');
-        const result = await invoke('run_pandoc', { command });
-
-        elements.statusText.textContent = 'Conversion complete!';
-        elements.progressBar.classList.remove('progress-primary');
-        elements.progressBar.classList.add('progress-success');
-        showToast('Document converted successfully!', 'success');
+        await invoke('run_pandoc', { command });
+        $('statusText').textContent = 'Done!';
+        showToast('Converted successfully!', 'success');
       } else {
-        // Web demo mode
         setTimeout(() => {
-          elements.statusText.textContent = 'Demo mode: Copy the command to run manually';
-          elements.progressBar.classList.remove('progress-primary');
-          elements.progressBar.classList.add('progress-info');
-          showToast('Running in web mode. Copy command to run in terminal.', 'info');
-        }, 1000);
+          $('statusText').textContent = 'Web mode: copy command to run';
+          showToast('Copy command to run in terminal', 'info');
+        }, 500);
       }
     } catch (err) {
-      elements.statusText.textContent = `Error: ${err.message || err}`;
-      elements.progressBar.classList.remove('progress-primary');
-      elements.progressBar.classList.add('progress-error');
-      showToast(`Conversion failed: ${err.message || err}`, 'error');
+      $('statusText').textContent = `Error: ${err}`;
+      showToast('Conversion failed', 'error');
     } finally {
-      elements.convertBtn.disabled = false;
+      $('convertBtn').disabled = !inputFilePath;
     }
   });
 }
 
-// Event listeners for all inputs to update preview
+// Event listeners for all inputs
 function setupInputListeners() {
-  const inputs = document.querySelectorAll('input, select, textarea');
-  inputs.forEach(input => {
-    input.addEventListener('change', updateCommandPreview);
-    input.addEventListener('input', updateCommandPreview);
+  document.querySelectorAll('input, select').forEach(input => {
+    if (!['inputFile', 'themeToggle'].includes(input.id)) {
+      input.addEventListener('change', updateCommandPreview);
+      input.addEventListener('input', updateCommandPreview);
+    }
   });
 }
 
 // Initialize
 function init() {
   initTheme();
+  loadSystemFonts();
   setupFileHandling();
+  setupMargins();
+  setupCodePreview();
   setupFormatHandling();
   setupTocHandling();
   setupCopyCommand();
   setupConversion();
   setupInputListeners();
 
-  elements.themeToggle.addEventListener('change', toggleTheme);
+  $('themeToggle').addEventListener('change', toggleTheme);
 
-  // Initial command preview
   updateCommandPreview();
-
-  // Show PDF options by default
-  elements.pdfEngineSection.style.display = 'block';
-  elements.pdfAdvanced.style.display = 'block';
 }
 
-// Start app
 document.addEventListener('DOMContentLoaded', init);
