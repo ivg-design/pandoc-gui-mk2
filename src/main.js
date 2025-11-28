@@ -458,9 +458,13 @@ function buildPandocCommand() {
     args.push('--toc');
     args.push(`--toc-depth=${$('tocDepth').value}`);
 
-    // New page after TOC
+    // New page after TOC - use LaTeX clearpage to start content on new page
+    // Note: Don't use -V toc-own-page=true as it forces ALL sections to start on new pages
     if ($('tocNewPage') && $('tocNewPage').checked && isPdf) {
-      args.push('-V toc-own-page=true');
+      args.push('-V toc-title="Contents"');  // Ensure TOC has a title
+      // Add clearpage after TOC via header-includes
+      // This inserts a page break immediately after the TOC
+      args.push('-V header-includes="\\\\let\\\\oldtableofcontents\\\\tableofcontents\\\\renewcommand{\\\\tableofcontents}{\\\\oldtableofcontents\\\\clearpage}"');
     }
   }
 
