@@ -1,0 +1,57 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(var(--bc) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--bc) / 0.5);
+}
+
+/* Panel styling */
+.panel {
+  @apply bg-base-200 rounded-lg p-4;
+}
+
+/* File drop zone */
+.drop-zone {
+  @apply border-2 border-dashed border-base-content/30 rounded-lg p-8 text-center transition-all;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  @apply border-primary bg-primary/10;
+}
+
+/* Status indicator */
+.status-dot {
+  @apply w-2 h-2 rounded-full inline-block mr-2;
+}
+
+.status-dot.success { @apply bg-success; }
+.status-dot.error { @apply bg-error; }
+.status-dot.warning { @apply bg-warning; }
+.status-dot.info { @apply bg-info; }
+
+/* Command preview */
+.command-preview {
+  @apply font-mono text-sm bg-base-300 p-3 rounded overflow-x-auto whitespace-pre-wrap break-all;
+}
+
+/* Tooltip improvements */
+.tooltip-info::before {
+  max-width: 300px;
+  white-space: normal;
+}
