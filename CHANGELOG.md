@@ -8,18 +8,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Dependency checker with install buttons for Homebrew, apt, npm, cargo
-- Extended PATH support for finding pandoc in common installation directories
-- Improved token drag-and-drop with visual feedback
+- **Smart Dependency Management**:
+  - Automatic dependency detection on app startup (silent check)
+  - Features auto-disable when required dependencies are missing
+  - Tooltips on disabled features explain what needs to be installed
+  - PDF engine dropdown shows "(not installed)" for unavailable engines
+  - Mermaid options disabled when mermaid-filter missing
+  - pandoc-crossref checkbox disabled when filter missing
+- **Async Installation System**:
+  - Non-blocking dependency installation (UI stays responsive)
+  - Cancel button appears during installation to abort long-running installs
+  - Progress spinner shows installation is in progress
+  - Toast notifications for install start, success, and failure
+- **Uninstall Support**:
+  - Uninstall button for each installed optional dependency
+  - Confirmation dialog before uninstalling
+  - Pandoc (required) cannot be uninstalled from the app
+- **Colored Token Pills**:
+  - Tokens now display as colored pills in input fields (not plain text)
+  - Different colors for different token types (primary, secondary, accent, etc.)
+  - Pills can be removed by clicking the X button
+  - Drag-and-drop works in Tauri app (fixed WebView interception)
+- **FAB Menu Redesign**:
+  - Accordion-style submenus that expand inline
+  - Multiple submenus can be open simultaneously
+  - Smooth animations for open/close
+- Extended PATH support for finding tools in:
+  - Homebrew paths (`/usr/local/bin`, `/opt/homebrew/bin`)
+  - nvm Node.js versions (`~/.nvm/versions/node/*/bin`)
+  - Cargo binaries (`~/.cargo/bin`)
+  - TeX Live paths
 
 ### Fixed
+- **Tauri Drag-Drop**: Set `dragDropEnabled: false` in Tauri config to allow JavaScript to handle drag-drop instead of native WebView interception
+- **mermaid-filter Detection**: Changed from `--version` flag (which errors) to `which mermaid-filter`
 - FAB preset dropdown now shows multiple presets (taller, not wider)
-- Token drag/drop now works reliably on all input fields
+- Token drag/drop now works reliably on all input fields including headers/footers
+- Duplicate token insertion no longer corrupts existing pills
 - PATH issues with pandoc and other tools in Tauri environment
 
 ### Changed
 - Tokens section now expanded by default in Content tab
 - Removed custom floating tooltip system in favor of DaisyUI tooltips
+- Header/footer fields converted from text inputs to contenteditable divs for rich token display
+- Install buttons now show spinner with "Cancel Install" option
+- Dependency checker refreshes after install/uninstall operations
 
 ## [2.0.0] - 2025-11-27
 

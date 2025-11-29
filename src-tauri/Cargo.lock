@@ -2477,6 +2477,7 @@ dependencies = [
 name = "pandoc-gui"
 version = "2.0.1"
 dependencies = [
+ "lazy_static",
  "log",
  "open",
  "serde",
@@ -2487,6 +2488,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-log",
  "tauri-plugin-shell",
+ "tokio",
 ]
 
 [[package]]

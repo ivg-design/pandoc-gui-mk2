@@ -43,14 +43,15 @@ A modern, cross-platform graphical user interface for [Pandoc](https://pandoc.or
 - **Top-Level Divisions**: Parts, Chapters, or Sections
 
 ### Metadata & Content
-- **Dynamic Tokens**: Drag-and-drop tokens for dynamic content
+- **Dynamic Tokens**: Drag-and-drop colored token pills for dynamic content
   - `{today}` - Current date (formatted)
   - `{year}` - Current year
   - `{file}` - Input filename (without extension)
   - `{user}` - Current username
   - `{title}`, `{author}`, `{date}` - Document metadata
   - `{page}` - Page number
-- **Custom Headers/Footers**: Left, center, right positions
+- **Visual Token Insertion**: Tokens appear as colored pills in input fields
+- **Custom Headers/Footers**: Left, center, right positions with token support
 - **Page Number Formats**: "Page N", "N of X", or just "N"
 - **Page Number Styles**: Arabic (1, 2, 3), Roman (i, ii, iii), or uppercase Roman (I, II, III)
 
@@ -64,9 +65,16 @@ A modern, cross-platform graphical user interface for [Pandoc](https://pandoc.or
 ### User Experience
 - **Preset System**: Save, load, update, and delete conversion presets
 - **Multiple Themes**: Dim (default), Dark, Nord, Dracula, Sunset, Light
-- **Dependency Checker**: Verify all required tools are installed with install guides
+- **Smart Dependency Management**:
+  - Automatic dependency detection on startup
+  - Features automatically disabled when required tools are missing
+  - One-click install buttons for Homebrew, apt, npm, and cargo
+  - Cancel button during long installations
+  - Uninstall buttons for optional dependencies
+  - Helpful tooltips explaining why features are disabled
 - **Tooltips**: Contextual help for all options
 - **Tab-based Interface**: Organized into Layout, Fonts, Document, Content, Advanced, Command
+- **FAB Menu**: Accordion-style floating action button with nested submenus
 
 ## Installation
 
@@ -151,11 +159,22 @@ Tokens are dynamic placeholders that get replaced during conversion:
 3. Select **Presets** → **Save New**
 4. Enter a name for your preset
 
-### Checking Dependencies
+### Managing Dependencies
 
 1. Click the menu button (⋮)
 2. Select **Check Dependencies**
-3. Missing tools show install buttons for Homebrew, apt, npm, or cargo
+3. The app shows status of all dependencies:
+   - **Green checkmark**: Installed with version info
+   - **Red X**: Not installed, with install buttons
+4. For missing tools:
+   - Click the appropriate install button (Homebrew, apt, npm, cargo)
+   - A spinner shows while installing; click "Cancel Install" to abort
+   - After installation, the list refreshes automatically
+5. To uninstall optional dependencies:
+   - Click the "Uninstall" button next to any installed optional tool
+   - Pandoc (required) cannot be uninstalled from the app
+
+**Note**: Features requiring missing dependencies are automatically disabled with a tooltip explaining what needs to be installed.
 
 ## Keyboard Shortcuts
 
