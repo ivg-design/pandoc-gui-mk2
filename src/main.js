@@ -928,13 +928,22 @@ function buildPandocCommand() {
   if (author) args.push(`-M author="${author}"`);
   if (date) args.push(`-M date="${date}"`);
 
-  // Mermaid filter
+  // Mermaid filter - always use SVG for better quality and scalability
   const hasMermaid = !$('mermaidDetected').classList.contains('hidden');
   if (hasMermaid) {
-    const mermaidFormat = document.querySelector('input[name="mermaidFormat"]:checked').value;
     args.push('-F mermaid-filter');
-    if (mermaidFormat === 'svg') {
-      args.push('-M mermaid-format=svg');
+    // Always use SVG format (more scalable than PNG for small diagrams)
+    args.push('-M mermaid-format=svg');
+    // Configure theme and background based on dark mode
+    const isDarkMode = $('darkMode') && $('darkMode').checked;
+    if (isDarkMode) {
+      // Dark mode: use dark theme with transparent background
+      args.push('-M mermaid-theme=dark');
+      args.push('-M mermaid-background=transparent');
+    } else {
+      // Light mode: use default theme with transparent background
+      args.push('-M mermaid-theme=default');
+      args.push('-M mermaid-background=transparent');
     }
   }
 
@@ -1162,9 +1171,6 @@ function getCurrentSettings() {
       }
     }
   });
-  // Also save mermaid format radio
-  const mermaidRadio = document.querySelector('input[name="mermaidFormat"]:checked');
-  if (mermaidRadio) settings.mermaidFormat = mermaidRadio.value;
   return settings;
 }
 
@@ -1182,11 +1188,6 @@ function applySettings(settings) {
       }
     }
   });
-  // Restore mermaid format
-  if (settings.mermaidFormat) {
-    const radio = document.querySelector(`input[name="mermaidFormat"][value="${settings.mermaidFormat}"]`);
-    if (radio) radio.checked = true;
-  }
   // Trigger UI updates
   $('uniformMargins').dispatchEvent(new Event('change'));
   $('toc').dispatchEvent(new Event('change'));
@@ -1705,18 +1706,18 @@ function updateFeatureAvailability() {
     }
   }
 
-  // Mermaid section
-  const mermaidRadios = document.querySelectorAll('input[name="mermaidFormat"]');
-  const mermaidSection = mermaidRadios[0]?.closest('.flex.items-center');
-  if (mermaidSection) {
-    if (!hasMermaid) {
-      mermaidSection.classList.add('opacity-50');
-      mermaidRadios.forEach(r => r.disabled = true);
-      mermaidSection.setAttribute('title', 'mermaid-filter not installed. Check Dependencies to install.');
-    } else {
-      mermaidSection.classList.remove('opacity-50');
-      mermaidRadios.forEach(r => r.disabled = false);
-      mermaidSection.removeAttribute('title');
+  // Mermaid badge
+  const mermaidBadge = document.getElementById('mermaidDetected');
+  if (mermaidBadge) {
+    const mermaidSection = mermaidBadge.closest('.flex.items-center');
+    if (mermaidSection) {
+      if (!hasMermaid) {
+        mermaidSection.classList.add('opacity-50');
+        mermaidSection.setAttribute('title', 'mermaid-filter not installed. Check Dependencies to install.');
+      } else {
+        mermaidSection.classList.remove('opacity-50');
+        mermaidSection.removeAttribute('title');
+      }
     }
   }
 
