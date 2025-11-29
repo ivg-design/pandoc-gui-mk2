@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
 use tauri::{AppHandle, Emitter};
+use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
 
 // Track running install processes for cancellation
 static NEXT_INSTALL_ID: AtomicU32 = AtomicU32::new(1);
@@ -94,6 +95,8 @@ fn check_command(command: String) -> Result<String, String> {
 #[tauri::command]
 fn run_pandoc(command: String) -> Result<String, String> {
     let extended_path = get_extended_path();
+    let home = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+    let temp_dir = env::temp_dir();
 
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -103,6 +106,10 @@ fn run_pandoc(command: String) -> Result<String, String> {
         Command::new("sh")
             .args(["-c", &command])
             .env("PATH", &extended_path)
+            // Set working directory to home to avoid read-only filesystem issues
+            .current_dir(&home)
+            // Redirect mermaid-filter error log to temp directory
+            .env("MERMAID_FILTER_ERR", temp_dir.join("mermaid-filter.err"))
             .output()
     };
 
@@ -311,6 +318,60 @@ fn file_exists(path: String) -> bool {
 }
 
 #[tauri::command]
+fn write_dark_mode_header() -> Result<String, String> {
+    use std::io::Write;
+
+    let temp_dir = env::temp_dir();
+    let header_path = temp_dir.join("pandoc-dark-mode.tex");
+
+    let header_content = r#"\usepackage{pagecolor}
+\usepackage{xcolor}
+\definecolor{darkbg}{HTML}{1e1e2e}
+\definecolor{lighttext}{HTML}{cdd6f4}
+\pagecolor{darkbg}
+\color{lighttext}
+"#;
+
+    let mut file = std::fs::File::create(&header_path)
+        .map_err(|e| format!("Failed to create header file: {}", e))?;
+
+    file.write_all(header_content.as_bytes())
+        .map_err(|e| format!("Failed to write header file: {}", e))?;
+
+    Ok(header_path.to_string_lossy().to_string())
+}
+
+// Write a header file to fix Unicode box-drawing characters for monospace fonts
+#[tauri::command]
+fn write_unicode_header() -> Result<String, String> {
+    use std::io::Write;
+
+    let temp_dir = env::temp_dir();
+    let header_path = temp_dir.join("pandoc-unicode-fix.tex");
+
+    // Use fontspec to set fallback fonts for missing Unicode characters
+    // Menlo on macOS has good Unicode coverage including box-drawing chars
+    let header_content = r#"\usepackage{fontspec}
+\directlua{
+  luaotfload.add_fallback("monofallback", {
+    "Menlo:mode=harf;",
+    "DejaVu Sans Mono:mode=harf;",
+    "Apple Symbols:mode=harf;",
+  })
+}
+\setmonofont{Noto Mono}[RawFeature={fallback=monofallback}]
+"#;
+
+    let mut file = std::fs::File::create(&header_path)
+        .map_err(|e| format!("Failed to create header file: {}", e))?;
+
+    file.write_all(header_content.as_bytes())
+        .map_err(|e| format!("Failed to write header file: {}", e))?;
+
+    Ok(header_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
 fn list_system_fonts() -> Result<Vec<String>, String> {
     use std::collections::HashSet;
 
@@ -387,6 +448,44 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
+            // Create custom menu
+            let about_item = MenuItem::with_id(app, "about", "About Pandoc GUI", true, None::<&str>)?;
+            let quit_item = PredefinedMenuItem::quit(app, Some("Quit"))?;
+            let separator = PredefinedMenuItem::separator(app)?;
+
+            let app_menu = Submenu::with_items(
+                app,
+                "Pandoc GUI",
+                true,
+                &[&about_item, &separator, &quit_item],
+            )?;
+
+            let edit_menu = Submenu::with_items(
+                app,
+                "Edit",
+                true,
+                &[
+                    &PredefinedMenuItem::undo(app, Some("Undo"))?,
+                    &PredefinedMenuItem::redo(app, Some("Redo"))?,
+                    &PredefinedMenuItem::separator(app)?,
+                    &PredefinedMenuItem::cut(app, Some("Cut"))?,
+                    &PredefinedMenuItem::copy(app, Some("Copy"))?,
+                    &PredefinedMenuItem::paste(app, Some("Paste"))?,
+                    &PredefinedMenuItem::select_all(app, Some("Select All"))?,
+                ],
+            )?;
+
+            let menu = Menu::with_items(app, &[&app_menu, &edit_menu])?;
+            app.set_menu(menu)?;
+
+            // Handle menu events
+            app.on_menu_event(|app_handle, event| {
+                if event.id().as_ref() == "about" {
+                    // Emit event to frontend to show About modal
+                    let _ = app_handle.emit("show-about", ());
+                }
+            });
+
             if cfg!(debug_assertions) {
                 app.handle().plugin(
                     tauri_plugin_log::Builder::default()
@@ -396,7 +495,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists, install_dependency, cancel_all_installs, uninstall_dependency, reinstall_dependency, run_command_with_output])
+        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists, write_dark_mode_header, write_unicode_header, install_dependency, cancel_all_installs, uninstall_dependency, reinstall_dependency, run_command_with_output])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -654,56 +654,61 @@
             <button id="fabToggle" class="btn btn-circle btn-ghost">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
             </button>
-            <div id="fabMenu" class="fab-menu bg-base-300 rounded-box w-64 p-2 shadow-lg">
+            <div id="fabMenu" class="fab-menu bg-base-300 rounded-box w-56 p-1.5 shadow-lg text-sm">
               <!-- Presets Accordion -->
               <div class="fab-accordion">
-                <button class="fab-accordion-trigger w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                <button class="fab-accordion-trigger w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                   <span class="flex-1 text-left">Presets</span>
-                  <span class="fab-accordion-arrow text-xs transition-transform">▼</span>
+                  <span class="fab-accordion-arrow text-[10px] transition-transform">▼</span>
                 </button>
                 <div class="fab-accordion-content">
-                  <div class="pl-6 pr-2 py-2 space-y-1">
-                    <select id="presetSelect" class="select select-bordered select-sm w-full">
+                  <div class="pl-5 pr-1 py-1 space-y-0.5">
+                    <select id="presetSelect" class="select select-bordered select-xs w-full">
                       <option value="">Select preset...</option>
                     </select>
-                    <a id="loadPreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Load Selected</a>
-                    <a id="savePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Save New...</a>
-                    <a id="updatePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Update Selected</a>
-                    <a id="deletePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer text-error">Delete Selected</a>
+                    <a id="loadPreset" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Load Selected</a>
+                    <a id="savePreset" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Save New...</a>
+                    <a id="updatePreset" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Update Selected</a>
+                    <a id="deletePreset" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer text-error">Delete Selected</a>
                   </div>
                 </div>
               </div>
               <!-- Theme Accordion -->
               <div class="fab-accordion">
-                <button class="fab-accordion-trigger w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                <button class="fab-accordion-trigger w-full flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
                   <span class="flex-1 text-left">Theme</span>
-                  <span class="fab-accordion-arrow text-xs transition-transform">▼</span>
+                  <span class="fab-accordion-arrow text-[10px] transition-transform">▼</span>
                 </button>
                 <div class="fab-accordion-content">
-                  <div class="pl-6 pr-2 py-2 space-y-1">
-                    <a data-set-theme="dim" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dim</a>
-                    <a data-set-theme="dark" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dark</a>
-                    <a data-set-theme="nord" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Nord</a>
-                    <a data-set-theme="dracula" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dracula</a>
-                    <a data-set-theme="sunset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Sunset</a>
-                    <a data-set-theme="light" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Light</a>
+                  <div class="pl-5 pr-1 py-1 space-y-0.5">
+                    <a data-set-theme="dim" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Dim</a>
+                    <a data-set-theme="dark" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Dark</a>
+                    <a data-set-theme="nord" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Nord</a>
+                    <a data-set-theme="dracula" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Dracula</a>
+                    <a data-set-theme="sunset" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Sunset</a>
+                    <a data-set-theme="light" class="block px-2 py-1 rounded hover:bg-base-200 cursor-pointer">Light</a>
                   </div>
                 </div>
               </div>
-              <div class="divider my-1"></div>
-              <a id="fabCheckDeps" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Check Dependencies
+              <div class="divider my-0.5"></div>
+              <a id="fabCheckDeps" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Dependencies
               </a>
-              <a id="fabResetDefaults" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Reset Defaults
+              <a id="fabResetDefaults" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset
               </a>
-              <a id="fabCopyCmd" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+              <a id="fabCopyCmd" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 Copy Command
+              </a>
+              <div class="divider my-0.5"></div>
+              <a id="fabAbout" class="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                About
               </a>
             </div>
           </div>
@@ -782,6 +787,92 @@
         <button id="progressCloseBtn" class="btn hidden">Close</button>
       </div>
     </div>
+  </dialog>
+
+  <!-- About Modal -->
+  <dialog id="aboutModal" class="modal">
+    <div class="modal-box max-w-2xl">
+      <h3 class="font-bold text-xl mb-2 flex items-center gap-2">
+        <img src="/icon.png" alt="Pandoc GUI" class="w-8 h-8">
+        Pandoc GUI
+      </h3>
+      <p class="text-sm text-base-content/70 mb-4">Version 2.0.1</p>
+
+      <div class="divider my-2"></div>
+
+      <div class="mb-4">
+        <p class="text-sm mb-2">A modern, cross-platform graphical user interface for Pandoc, the universal document converter.</p>
+        <p class="text-sm text-base-content/70">&copy; 2025 IVG Design. All rights reserved.</p>
+      </div>
+
+      <div class="mb-4">
+        <a href="https://github.com/ivg/pandoc-gui-mk2" target="_blank" class="link link-primary text-sm flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub Repository
+        </a>
+      </div>
+
+      <div class="collapse collapse-arrow bg-base-200 mb-2">
+        <input type="checkbox">
+        <div class="collapse-title text-sm font-medium">Frontend Dependencies</div>
+        <div class="collapse-content text-xs">
+          <ul class="space-y-1">
+            <li><a href="https://tauri.app" target="_blank" class="link link-primary">Tauri</a> v2.9 - MIT License</li>
+            <li><a href="https://tailwindcss.com" target="_blank" class="link link-primary">TailwindCSS</a> v4.1 - MIT License</li>
+            <li><a href="https://daisyui.com" target="_blank" class="link link-primary">DaisyUI</a> v5.5 - MIT License</li>
+            <li><a href="https://vite.dev" target="_blank" class="link link-primary">Vite</a> v7.2 - MIT License</li>
+            <li><a href="https://sortablejs.github.io/Sortable/" target="_blank" class="link link-primary">SortableJS</a> v1.15 - MIT License</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="collapse collapse-arrow bg-base-200 mb-2">
+        <input type="checkbox">
+        <div class="collapse-title text-sm font-medium">Backend Dependencies (Rust)</div>
+        <div class="collapse-content text-xs">
+          <ul class="space-y-1">
+            <li><a href="https://tauri.app" target="_blank" class="link link-primary">Tauri</a> v2.9 - MIT/Apache-2.0</li>
+            <li><a href="https://serde.rs" target="_blank" class="link link-primary">Serde</a> v1.0 - MIT/Apache-2.0</li>
+            <li><a href="https://tokio.rs" target="_blank" class="link link-primary">Tokio</a> v1.0 - MIT License</li>
+            <li><a href="https://docs.rs/log" target="_blank" class="link link-primary">Log</a> v0.4 - MIT/Apache-2.0</li>
+            <li><a href="https://docs.rs/lazy_static" target="_blank" class="link link-primary">lazy_static</a> v1.4 - MIT/Apache-2.0</li>
+            <li><a href="https://docs.rs/open" target="_blank" class="link link-primary">open</a> v5.0 - MIT License</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="collapse collapse-arrow bg-base-200 mb-2">
+        <input type="checkbox">
+        <div class="collapse-title text-sm font-medium">Powered By</div>
+        <div class="collapse-content text-xs">
+          <ul class="space-y-1">
+            <li><a href="https://pandoc.org" target="_blank" class="link link-primary">Pandoc</a> - GPL-2.0 License - Universal document converter by John MacFarlane</li>
+            <li><a href="https://tectonic-typesetting.github.io" target="_blank" class="link link-primary">Tectonic</a> - MIT License - Modernized TeX/LaTeX engine</li>
+            <li><a href="https://www.latex-project.org" target="_blank" class="link link-primary">LaTeX</a> - LPPL License - Document preparation system</li>
+            <li><a href="https://mermaid.js.org" target="_blank" class="link link-primary">Mermaid</a> - MIT License - Diagram and charting tool</li>
+            <li><a href="https://github.com/lierdakil/pandoc-crossref" target="_blank" class="link link-primary">pandoc-crossref</a> - GPL-2.0 License - Cross-referencing filter</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="collapse collapse-arrow bg-base-200">
+        <input type="checkbox">
+        <div class="collapse-title text-sm font-medium">License</div>
+        <div class="collapse-content text-xs">
+          <p class="mb-2">Pandoc GUI is released under the MIT License.</p>
+          <p class="text-base-content/70">Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.</p>
+        </div>
+      </div>
+
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Close</button>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
   </dialog>
 
   <script src="/src/main.js" type="module"></script>

@@ -783,18 +783,24 @@ function buildPandocCommand() {
       args.push('-V titlepage-rule-height=0');
     }
 
-    // Link colors
-    if ($('colorLinks').checked) {
+    // Link colors - dark mode overrides custom colors
+    const isDarkMode = $('darkMode') && $('darkMode').checked;
+    if (isDarkMode) {
+      // Set link colors for dark mode (cyan works well on dark background)
+      args.push('-V colorlinks=true');
+      args.push('-V linkcolor=cyan');
+      args.push('-V urlcolor=cyan');
+      args.push('-V filecolor=cyan');
+      args.push('-V citecolor=cyan');
+      // Mark that dark mode is enabled (placeholder for header path)
+      // This will be replaced during conversion with actual -H flag
+      args.push('--DARK-MODE-PLACEHOLDER--');
+    } else if ($('colorLinks').checked) {
+      // Custom link colors (only if not in dark mode)
       args.push('-V colorlinks=true');
       const color = $('linkColor').value.replace('#', '');
       args.push(`-V 'linkcolor=[HTML]{${color}}'`);
       args.push(`-V 'urlcolor=[HTML]{${color}}'`);
-    }
-
-    // Dark mode for PDF - uses pagecolor and xcolor packages
-    if ($('darkMode') && $('darkMode').checked) {
-      // Add header-includes for dark mode
-      args.push('-V header-includes="\\\\usepackage{pagecolor}\\\\usepackage{xcolor}\\\\pagecolor[HTML]{1e1e2e}\\\\color[HTML]{cdd6f4}"');
     }
 
     // Headers and Footers - only add if user specifies custom content
@@ -882,10 +888,10 @@ function buildPandocCommand() {
     args.push(`-V linestretch=${$('lineHeight').value}`);
   }
 
-  // Code highlighting
+  // Code highlighting (using --syntax-highlighting, replaces deprecated --highlight-style)
   const highlightTheme = $('highlightTheme').value;
   if (highlightTheme && highlightTheme !== 'none') {
-    args.push(`--highlight-style=${highlightTheme}`);
+    args.push(`--syntax-highlighting=${highlightTheme}`);
   }
 
   // TOC
@@ -1044,7 +1050,25 @@ function setupConversion() {
     try {
       if (isTauri) {
         const { invoke } = await import('@tauri-apps/api/core');
-        const command = buildPandocCommand().replace(/\\\n\s+/g, ' ');
+        let command = buildPandocCommand().replace(/\\\n\s+/g, ' ');
+
+        // Handle dark mode header file for PDF
+        if (command.includes('--DARK-MODE-PLACEHOLDER--')) {
+          console.log('Dark mode detected, writing header file...');
+          const headerPath = await invoke('write_dark_mode_header');
+          console.log('Dark mode header written to:', headerPath);
+          const beforeReplace = command;
+          command = command.replace('--DARK-MODE-PLACEHOLDER--', `-H "${headerPath}"`);
+          if (beforeReplace === command) {
+            console.warn('WARNING: Placeholder replacement had no effect');
+          }
+        }
+
+        // Safety check: ensure no placeholder made it through
+        if (command.includes('--DARK-MODE-PLACEHOLDER--')) {
+          throw new Error('Dark mode header placeholder was not properly replaced. Please try disabling dark mode or contact support.');
+        }
+
         await invoke('run_pandoc', { command });
 
         $('statusText').textContent = 'Conversion complete!';
@@ -1296,6 +1320,13 @@ function setupFabMenu() {
       showToast('Failed to copy command', 'error');
     });
     document.activeElement?.blur();
+  });
+
+  // About dialog
+  $('fabAbout')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.activeElement?.blur();
+    $('aboutModal')?.showModal();
   });
 }
 
@@ -1893,7 +1924,7 @@ function setupFabMenu2() {
   });
 
   // Close menu after clicking certain action items
-  const closeActions = ['fabCheckDeps', 'fabResetDefaults', 'fabCopyCmd'];
+  const closeActions = ['fabCheckDeps', 'fabResetDefaults', 'fabCopyCmd', 'fabAbout'];
   closeActions.forEach(id => {
     const el = $(id);
     if (el) {
@@ -1930,6 +1961,14 @@ async function init() {
   setupFabMenu();
   setupPdfEngineDropdown();
   setupFabMenu2();
+
+  // Listen for menu About event from Tauri
+  if (isTauri) {
+    const { listen } = await import('@tauri-apps/api/event');
+    listen('show-about', () => {
+      $('aboutModal')?.showModal();
+    });
+  }
 
   // Check dependencies silently to enable/disable features
   checkDependenciesSilent();
