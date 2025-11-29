@@ -573,21 +573,21 @@
             <ul tabindex="0" class="dropdown-content menu bg-base-300 rounded-box z-50 w-56 p-2 shadow-lg mb-2">
               <!-- Presets Submenu -->
               <li>
-                <details>
-                  <summary>
+                <details id="presetsDetails">
+                  <summary class="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                     Presets
                   </summary>
-                  <ul class="bg-base-200 rounded-box p-2 min-w-48">
+                  <ul class="bg-base-200 rounded-box p-2 min-w-52 z-[100]">
                     <li class="mb-2">
-                      <select id="presetSelect" class="select select-bordered select-sm w-full" size="4">
+                      <select id="presetSelect" class="select select-bordered select-sm w-full max-h-32" size="5">
                         <option value="">Select preset...</option>
                       </select>
                     </li>
-                    <li><a id="loadPreset">Load</a></li>
-                    <li><a id="savePreset">Save New</a></li>
-                    <li><a id="updatePreset">Update</a></li>
-                    <li><a id="deletePreset" class="text-error">Delete</a></li>
+                    <li><a id="loadPreset" class="justify-start">Load Selected</a></li>
+                    <li><a id="savePreset" class="justify-start">Save New...</a></li>
+                    <li><a id="updatePreset" class="justify-start">Update Selected</a></li>
+                    <li><a id="deletePreset" class="text-error justify-start">Delete Selected</a></li>
                   </ul>
                 </details>
               </li>

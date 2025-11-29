@@ -22,24 +22,9 @@ async function detectTauri() {
   }
 }
 
-// Common fonts
-const commonFonts = [
-  'Arial', 'Arial Black', 'Book Antiqua', 'Century Gothic', 'Comic Sans MS',
-  'Courier New', 'Garamond', 'Georgia', 'Helvetica', 'Impact', 'Lucida Console',
-  'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
-  'American Typewriter', 'Avenir', 'Baskerville', 'Bodoni 72', 'Charter',
-  'Cochin', 'Didot', 'Futura', 'Geneva', 'Gill Sans', 'Helvetica Neue',
-  'Hoefler Text', 'Lucida Grande', 'Menlo', 'Monaco', 'Optima', 'Rockwell',
-  'San Francisco', 'Times', 'DejaVu Sans', 'DejaVu Serif', 'Liberation Sans',
-  'Liberation Serif', 'Noto Sans', 'Noto Serif', 'Ubuntu', 'Cantarell'
-];
-
-const monoFonts = [
-  'Courier New', 'Menlo', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code',
-  'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Inconsolata',
-  'Roboto Mono', 'Ubuntu Mono', 'Hack', 'Cascadia Code', 'DejaVu Sans Mono',
-  'Liberation Mono', 'PT Mono', 'Noto Sans Mono', 'Iosevka'
-];
+// Font detection - populated from system fonts via queryLocalFonts() API
+let systemFonts = [];
+let monoFonts = [];
 
 // Code theme colors
 const themeColors = {
@@ -78,24 +63,89 @@ function initTheme() {
   });
 }
 
-// System Fonts
-function loadSystemFonts() {
+// System Fonts - uses Local Font Access API to get actual installed fonts
+async function loadSystemFonts() {
   const mainFontSelect = $('mainFont');
   const monoFontSelect = $('monoFont');
 
-  commonFonts.sort().forEach(font => {
+  // Known monospace font family patterns
+  const monoPatterns = [
+    /mono/i, /courier/i, /consolas/i, /menlo/i, /monaco/i,
+    /fira\s*code/i, /jetbrains/i, /source\s*code/i, /inconsolata/i,
+    /hack/i, /cascadia/i, /iosevka/i, /sf\s*mono/i, /dejavu.*mono/i,
+    /liberation.*mono/i, /ubuntu.*mono/i, /roboto.*mono/i, /ibm.*plex.*mono/i,
+    /pt\s*mono/i, /droid.*mono/i, /anonymous/i, /terminus/i
+  ];
+
+  const isMono = (fontFamily) => monoPatterns.some(p => p.test(fontFamily));
+
+  try {
+    // Try Local Font Access API (Chrome 103+, requires permission)
+    if ('queryLocalFonts' in window) {
+      const fonts = await window.queryLocalFonts();
+      const fontFamilies = new Set();
+      const monoFamilies = new Set();
+
+      for (const font of fonts) {
+        const family = font.family;
+        if (!fontFamilies.has(family)) {
+          fontFamilies.add(family);
+          if (isMono(family)) {
+            monoFamilies.add(family);
+          }
+        }
+      }
+
+      systemFonts = [...fontFamilies].sort((a, b) => a.localeCompare(b));
+      monoFonts = [...monoFamilies].sort((a, b) => a.localeCompare(b));
+
+      console.log(`Loaded ${systemFonts.length} system fonts, ${monoFonts.length} monospace`);
+    } else {
+      throw new Error('queryLocalFonts not available');
+    }
+  } catch (e) {
+    console.log('Local Font Access API not available, using Tauri backend');
+    // Try Tauri backend to list fonts
+    if (isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const fonts = await invoke('list_system_fonts');
+        if (fonts && fonts.length > 0) {
+          systemFonts = fonts.sort((a, b) => a.localeCompare(b));
+          monoFonts = fonts.filter(f => isMono(f)).sort((a, b) => a.localeCompare(b));
+          console.log(`Loaded ${systemFonts.length} fonts via Tauri`);
+        }
+      } catch (tauriErr) {
+        console.log('Tauri font listing not available:', tauriErr);
+      }
+    }
+  }
+
+  // Populate dropdowns
+  systemFonts.forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
+    opt.style.fontFamily = font;
     mainFontSelect.appendChild(opt);
   });
 
-  monoFonts.sort().forEach(font => {
+  monoFonts.forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
     opt.textContent = font;
+    opt.style.fontFamily = font;
     monoFontSelect.appendChild(opt);
   });
+
+  // If no fonts loaded, show a message
+  if (systemFonts.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = '(Grant font permission or use Tauri app)';
+    opt.disabled = true;
+    mainFontSelect.appendChild(opt);
+  }
 }
 
 // File Handling
@@ -345,10 +395,15 @@ function setupTocHandling() {
   });
 }
 
-// Token drag and drop
+// Token drag and drop - with click as primary interaction
+let lastFocusedTokenInput = null;
+
 function setupTokenDrag() {
   const tokenList = $('tokenList');
-  if (!tokenList) return;
+  if (!tokenList) {
+    console.error('tokenList element not found');
+    return;
+  }
 
   // Get all text inputs that can accept tokens
   const dropTargetIds = [
@@ -358,94 +413,13 @@ function setupTokenDrag() {
     'outputName', 'extraArgs'
   ];
 
-  let draggedToken = null;
-
-  // Setup drag on tokens
-  tokenList.querySelectorAll('[data-token]').forEach(token => {
-    token.setAttribute('draggable', 'true');
-
-    token.addEventListener('dragstart', (e) => {
-      draggedToken = token.dataset.token;
-      e.dataTransfer.setData('text/plain', token.dataset.token);
-      e.dataTransfer.setData('application/x-token', token.dataset.token);
-      e.dataTransfer.effectAllowed = 'copy';
-      token.classList.add('dragging-token');
-
-      // Create a styled drag image
-      const dragImage = token.cloneNode(true);
-      dragImage.style.position = 'absolute';
-      dragImage.style.top = '-1000px';
-      document.body.appendChild(dragImage);
-      e.dataTransfer.setDragImage(dragImage, 20, 10);
-      setTimeout(() => dragImage.remove(), 0);
-    });
-
-    token.addEventListener('dragend', () => {
-      token.classList.remove('dragging-token');
-      draggedToken = null;
-      // Remove drop-active from all targets
-      dropTargetIds.forEach(id => {
-        const el = $(id);
-        if (el) el.classList.remove('drop-active', 'drag-over');
-      });
-    });
-  });
-
-  // Setup drop targets
+  // Track last focused input for token insertion
   dropTargetIds.forEach(id => {
     const input = $(id);
     if (!input) return;
 
-    input.addEventListener('dragenter', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      input.classList.add('drop-active');
-    });
-
-    input.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      e.dataTransfer.dropEffect = 'copy';
-      input.classList.add('drop-active');
-    });
-
-    input.addEventListener('dragleave', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Only remove if we're actually leaving the element
-      const rect = input.getBoundingClientRect();
-      if (e.clientX < rect.left || e.clientX >= rect.right ||
-          e.clientY < rect.top || e.clientY >= rect.bottom) {
-        input.classList.remove('drop-active');
-      }
-    });
-
-    input.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      input.classList.remove('drop-active', 'drag-over');
-
-      // Try to get token from various sources
-      let token = e.dataTransfer.getData('application/x-token') ||
-                  e.dataTransfer.getData('text/plain') ||
-                  draggedToken;
-
-      if (token && token.startsWith('{') && token.endsWith('}')) {
-        const pos = input.selectionStart ?? input.value.length;
-        input.value = input.value.slice(0, pos) + token + input.value.slice(pos);
-        input.focus();
-        // Set cursor after inserted token
-        const newPos = pos + token.length;
-        input.setSelectionRange(newPos, newPos);
-        // Highlight the input to show token was added
-        highlightTokensInInput(input);
-        updateCommandPreview();
-        showToast(`Token ${token} added`, 'success');
-      }
-    });
-
-    // Also allow clicking on tokens to add them (as fallback)
     input.addEventListener('focus', () => {
+      lastFocusedTokenInput = input;
       highlightTokensInInput(input);
     });
 
@@ -454,20 +428,79 @@ function setupTokenDrag() {
     });
   });
 
-  // Make tokens clickable to add to focused input
-  tokenList.querySelectorAll('[data-token]').forEach(token => {
-    token.addEventListener('click', () => {
-      // Find the currently focused input or use a default
-      const activeEl = document.activeElement;
-      if (activeEl && dropTargetIds.includes(activeEl.id)) {
-        const input = activeEl;
-        const tokenValue = token.dataset.token;
+  // Primary: Click on token to insert into last focused input
+  const tokens = tokenList.querySelectorAll('[data-token]');
+  console.log(`Setting up ${tokens.length} tokens for drag/drop`);
+
+  tokens.forEach(token => {
+    // Click handler - primary way to insert tokens
+    token.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const tokenValue = token.dataset.token;
+
+      // Find target input: last focused, or first available
+      let targetInput = lastFocusedTokenInput;
+      if (!targetInput || !dropTargetIds.includes(targetInput.id)) {
+        targetInput = $('docTitle'); // Default to title field
+      }
+
+      if (targetInput) {
+        const pos = targetInput.selectionStart ?? targetInput.value.length;
+        targetInput.value = targetInput.value.slice(0, pos) + tokenValue + targetInput.value.slice(pos);
+        targetInput.focus();
+        const newPos = pos + tokenValue.length;
+        targetInput.setSelectionRange(newPos, newPos);
+        highlightTokensInInput(targetInput);
+        updateCommandPreview();
+        showToast(`Inserted ${tokenValue}`, 'success');
+      }
+    });
+
+    // Also support drag and drop
+    token.setAttribute('draggable', 'true');
+
+    token.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', token.dataset.token);
+      e.dataTransfer.effectAllowed = 'copy';
+      token.style.opacity = '0.5';
+    });
+
+    token.addEventListener('dragend', () => {
+      token.style.opacity = '1';
+    });
+  });
+
+  // Setup drop targets for drag and drop
+  dropTargetIds.forEach(id => {
+    const input = $(id);
+    if (!input) return;
+
+    input.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      input.classList.add('ring', 'ring-primary', 'ring-2');
+    });
+
+    input.addEventListener('dragleave', () => {
+      input.classList.remove('ring', 'ring-primary', 'ring-2');
+    });
+
+    input.addEventListener('drop', (e) => {
+      e.preventDefault();
+      input.classList.remove('ring', 'ring-primary', 'ring-2');
+
+      const tokenValue = e.dataTransfer.getData('text/plain');
+      if (tokenValue && tokenValue.startsWith('{') && tokenValue.endsWith('}')) {
         const pos = input.selectionStart ?? input.value.length;
         input.value = input.value.slice(0, pos) + tokenValue + input.value.slice(pos);
+        input.focus();
         const newPos = pos + tokenValue.length;
         input.setSelectionRange(newPos, newPos);
         highlightTokensInInput(input);
         updateCommandPreview();
+        showToast(`Inserted ${tokenValue}`, 'success');
       }
     });
   });
@@ -642,8 +675,11 @@ function buildPandocCommand() {
     args.push(`-V linestretch=${$('lineHeight').value}`);
   }
 
-  // Code highlighting
-  args.push(`--highlight-style=${$('highlightTheme').value}`);
+  // Code highlighting (use modern --syntax-highlighting instead of deprecated --highlight-style)
+  const highlightTheme = $('highlightTheme').value;
+  if (highlightTheme && highlightTheme !== 'none') {
+    args.push(`--syntax-highlighting=${highlightTheme}`);
+  }
 
   // TOC
   if ($('toc').checked) {
@@ -1288,7 +1324,7 @@ async function init() {
   await detectTauri();
 
   initTheme();
-  loadSystemFonts();
+  await loadSystemFonts();
   setupFileHandling();
   setupMargins();
   setupCodePreview();

@@ -95,6 +95,76 @@ fn open_file(path: String) -> Result<(), String> {
     open::that(&path).map_err(|e| format!("Failed to open file: {}", e))
 }
 
+#[tauri::command]
+fn list_system_fonts() -> Result<Vec<String>, String> {
+    use std::collections::HashSet;
+
+    // Platform-specific font listing
+    let output = if cfg!(target_os = "macos") {
+        // macOS: Try fc-list first, fall back to atsutil
+        Command::new("fc-list")
+            .args([":", "family"])
+            .output()
+            .or_else(|_| {
+                // Fallback: use atsutil on macOS (always available)
+                Command::new("sh")
+                    .args(["-c", "atsutil fonts -list | grep -v '^$' | sort -u"])
+                    .output()
+            })
+    } else if cfg!(target_os = "linux") {
+        // Linux: fc-list is standard on most distros
+        Command::new("fc-list")
+            .args([":", "family"])
+            .output()
+    } else if cfg!(target_os = "windows") {
+        // Windows: Use PowerShell with proper assembly loading
+        Command::new("powershell")
+            .args([
+                "-NoProfile",
+                "-Command",
+                "Add-Type -AssemblyName System.Drawing; (New-Object System.Drawing.Text.InstalledFontCollection).Families | ForEach-Object { $_.Name }"
+            ])
+            .output()
+    } else {
+        return Err("Unsupported platform".to_string());
+    };
+
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                let text = String::from_utf8_lossy(&output.stdout);
+                let mut fonts: HashSet<String> = HashSet::new();
+
+                for line in text.lines() {
+                    // fc-list may have multiple families separated by commas
+                    for part in line.split(',') {
+                        let font = part.trim().to_string();
+                        // Filter out empty lines, hidden fonts (starting with .), and system prefixes
+                        if !font.is_empty()
+                            && !font.starts_with('.')
+                            && !font.starts_with('#')
+                            && font.len() > 1
+                        {
+                            fonts.insert(font);
+                        }
+                    }
+                }
+
+                let mut result: Vec<String> = fonts.into_iter().collect();
+                result.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                Ok(result)
+            } else {
+                // Return empty list instead of error - font selection is optional
+                Ok(vec![])
+            }
+        }
+        Err(_) => {
+            // Return empty list if command fails
+            Ok(vec![])
+        }
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -111,7 +181,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command])
+        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
