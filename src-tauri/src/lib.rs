@@ -126,11 +126,12 @@ fn run_pandoc(command: String) -> Result<String, String> {
     }
 
     // Detect output format from command to optimize mermaid rendering
-    // PDF doesn't embed SVG well, so use PNG for PDF, SVG for HTML
+    // For PDF output: use PDF format (best quality, scalable, embeds perfectly)
+    // For HTML/EPUB: use SVG format (scalable, lightweight)
     let mermaid_format = if command.contains("-t pdf") || command.contains("-t=pdf") {
-        "png"  // PNG embeds better in PDF
+        "pdf"  // PDF format embeds perfectly in PDF output with full quality
     } else {
-        "svg"  // SVG is better for HTML/EPUB
+        "svg"  // SVG is best for HTML/EPUB (scalable, lightweight)
     };
 
     let output = if cfg!(target_os = "windows") {
