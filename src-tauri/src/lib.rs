@@ -7,8 +7,8 @@ fn get_extended_path() -> String {
     let home = env::var("HOME").unwrap_or_default();
 
     if cfg!(target_os = "macos") {
-        // macOS common paths for Homebrew, MacPorts, TeX, etc.
-        let extra_paths = vec![
+        // macOS common paths for Homebrew, MacPorts, TeX, npm global, etc.
+        let mut extra_paths = vec![
             "/usr/local/bin".to_string(),
             "/opt/homebrew/bin".to_string(),
             "/opt/local/bin".to_string(),
@@ -17,7 +17,23 @@ fn get_extended_path() -> String {
             format!("{}/bin", home),
             format!("{}/.local/bin", home),
             format!("{}/.cargo/bin", home),
+            // npm global paths
+            format!("{}/.npm-global/bin", home),
+            format!("{}/node_modules/.bin", home),
+            "/usr/local/lib/node_modules/.bin".to_string(),
         ];
+
+        // Find nvm node versions dynamically
+        let nvm_dir = format!("{}/.nvm/versions/node", home);
+        if let Ok(entries) = std::fs::read_dir(&nvm_dir) {
+            for entry in entries.flatten() {
+                let bin_path = entry.path().join("bin");
+                if bin_path.exists() {
+                    extra_paths.push(bin_path.to_string_lossy().to_string());
+                }
+            }
+        }
+
         format!("{}:{}", extra_paths.join(":"), current_path)
     } else if cfg!(target_os = "linux") {
         let extra_paths = vec![
@@ -27,6 +43,9 @@ fn get_extended_path() -> String {
             format!("{}/.cargo/bin", home),
             "/usr/local/texlive/2024/bin/x86_64-linux".to_string(),
             "/usr/local/texlive/2023/bin/x86_64-linux".to_string(),
+            // npm global paths
+            format!("{}/.npm-global/bin", home),
+            "/usr/local/lib/node_modules/.bin".to_string(),
         ];
         format!("{}:{}", extra_paths.join(":"), current_path)
     } else {
@@ -93,6 +112,11 @@ fn run_pandoc(command: String) -> Result<String, String> {
 #[tauri::command]
 fn open_file(path: String) -> Result<(), String> {
     open::that(&path).map_err(|e| format!("Failed to open file: {}", e))
+}
+
+#[tauri::command]
+fn file_exists(path: String) -> bool {
+    std::path::Path::new(&path).exists()
 }
 
 #[tauri::command]
@@ -181,7 +205,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts])
+        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -415,15 +415,15 @@
               <div class="grid grid-cols-3 gap-3">
                 <div class="form-control">
                   <label class="label py-0.5"><span class="label-text">Title</span></label>
-                  <input type="text" id="docTitle" class="input input-bordered input-sm w-full" placeholder="{file}">
+                  <div id="docTitle" class="input input-bordered input-sm w-full token-field" contenteditable="true" data-placeholder="{file}"></div>
                 </div>
                 <div class="form-control">
                   <label class="label py-0.5"><span class="label-text">Author</span></label>
-                  <input type="text" id="docAuthor" class="input input-bordered input-sm w-full" placeholder="{user}">
+                  <div id="docAuthor" class="input input-bordered input-sm w-full token-field" contenteditable="true" data-placeholder="{user}"></div>
                 </div>
                 <div class="form-control">
                   <label class="label py-0.5"><span class="label-text">Date</span></label>
-                  <input type="text" id="docDate" class="input input-bordered input-sm w-full" placeholder="{today}">
+                  <div id="docDate" class="input input-bordered input-sm w-full token-field" contenteditable="true" data-placeholder="{today}"></div>
                 </div>
               </div>
 
@@ -565,54 +565,63 @@
             <span class="label-text text-sm">Open when done</span>
             <input type="checkbox" id="openOnComplete" class="toggle toggle-primary toggle-sm" checked>
           </label>
-          <!-- FAB Menu (inline) -->
-          <div class="dropdown dropdown-top dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-circle btn-ghost">
+          <!-- FAB Menu (custom controlled, accordion style) -->
+          <div id="fabContainer" class="fab-container relative">
+            <button id="fabToggle" class="btn btn-circle btn-ghost">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+            </button>
+            <div id="fabMenu" class="fab-menu bg-base-300 rounded-box w-64 p-2 shadow-lg">
+              <!-- Presets Accordion -->
+              <div class="fab-accordion">
+                <button class="fab-accordion-trigger w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                  <span class="flex-1 text-left">Presets</span>
+                  <span class="fab-accordion-arrow text-xs transition-transform">▼</span>
+                </button>
+                <div class="fab-accordion-content">
+                  <div class="pl-6 pr-2 py-2 space-y-1">
+                    <select id="presetSelect" class="select select-bordered select-sm w-full">
+                      <option value="">Select preset...</option>
+                    </select>
+                    <a id="loadPreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Load Selected</a>
+                    <a id="savePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Save New...</a>
+                    <a id="updatePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Update Selected</a>
+                    <a id="deletePreset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer text-error">Delete Selected</a>
+                  </div>
+                </div>
+              </div>
+              <!-- Theme Accordion -->
+              <div class="fab-accordion">
+                <button class="fab-accordion-trigger w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                  <span class="flex-1 text-left">Theme</span>
+                  <span class="fab-accordion-arrow text-xs transition-transform">▼</span>
+                </button>
+                <div class="fab-accordion-content">
+                  <div class="pl-6 pr-2 py-2 space-y-1">
+                    <a data-set-theme="dim" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dim</a>
+                    <a data-set-theme="dark" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dark</a>
+                    <a data-set-theme="nord" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Nord</a>
+                    <a data-set-theme="dracula" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Dracula</a>
+                    <a data-set-theme="sunset" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Sunset</a>
+                    <a data-set-theme="light" class="block px-3 py-1.5 rounded hover:bg-base-200 cursor-pointer">Light</a>
+                  </div>
+                </div>
+              </div>
+              <div class="divider my-1"></div>
+              <a id="fabCheckDeps" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Check Dependencies
+              </a>
+              <a id="fabResetDefaults" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Reset Defaults
+              </a>
+              <a id="fabCopyCmd" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-base-200 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy Command
+              </a>
             </div>
-            <ul tabindex="0" class="dropdown-content menu bg-base-300 rounded-box z-50 w-56 p-2 shadow-lg mb-2">
-              <!-- Presets Submenu -->
-              <li>
-                <details id="presetsDetails">
-                  <summary class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
-                    Presets
-                  </summary>
-                  <ul class="bg-base-200 rounded-box p-2 min-w-52 z-[100]">
-                    <li class="mb-2">
-                      <select id="presetSelect" class="select select-bordered select-sm w-full max-h-32" size="5">
-                        <option value="">Select preset...</option>
-                      </select>
-                    </li>
-                    <li><a id="loadPreset" class="justify-start">Load Selected</a></li>
-                    <li><a id="savePreset" class="justify-start">Save New...</a></li>
-                    <li><a id="updatePreset" class="justify-start">Update Selected</a></li>
-                    <li><a id="deletePreset" class="text-error justify-start">Delete Selected</a></li>
-                  </ul>
-                </details>
-              </li>
-              <!-- Theme Submenu -->
-              <li>
-                <details>
-                  <summary>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-                    Theme
-                  </summary>
-                  <ul class="bg-base-200 rounded-box">
-                    <li><a data-set-theme="dim">Dim</a></li>
-                    <li><a data-set-theme="dark">Dark</a></li>
-                    <li><a data-set-theme="nord">Nord</a></li>
-                    <li><a data-set-theme="dracula">Dracula</a></li>
-                    <li><a data-set-theme="sunset">Sunset</a></li>
-                    <li><a data-set-theme="light">Light</a></li>
-                  </ul>
-                </details>
-              </li>
-              <li class="divider my-1"></li>
-              <li><a id="fabCheckDeps"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Check Dependencies</a></li>
-              <li><a id="fabResetDefaults"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset Defaults</a></li>
-              <li><a id="fabCopyCmd"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> Copy Command</a></li>
-            </ul>
           </div>
         </div>
 

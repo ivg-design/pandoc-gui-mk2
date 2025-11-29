@@ -396,7 +396,129 @@ function setupTocHandling() {
 }
 
 // Token drag and drop - with click as primary interaction
-let lastFocusedTokenInput = null;
+let lastFocusedTokenField = null;
+
+// Token color mapping based on badge classes
+const tokenColors = {
+  '{today}': 'primary',
+  '{year}': 'primary',
+  '{file}': 'secondary',
+  '{user}': 'secondary',
+  '{title}': 'accent',
+  '{author}': 'accent',
+  '{date}': 'accent',
+  '{page}': 'info',
+  '{pages}': 'info',
+  '{section}': 'warning',
+  '{chapter}': 'warning'
+};
+
+// Create a colored token pill element
+function createTokenPill(tokenValue) {
+  const color = tokenColors[tokenValue] || 'primary';
+  const pill = document.createElement('span');
+  pill.className = `token-pill token-${color}`;
+  pill.dataset.token = tokenValue;
+  pill.innerHTML = `${tokenValue}<span class="remove-token" title="Remove">×</span>`;
+  pill.contentEditable = 'false';
+
+  // Handle remove click
+  pill.querySelector('.remove-token').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pill.remove();
+    updateCommandPreview();
+  });
+
+  return pill;
+}
+
+// Insert token pill at cursor position in contenteditable
+function insertTokenPill(field, tokenValue) {
+  const pill = createTokenPill(tokenValue);
+
+  // Get current selection
+  const selection = window.getSelection();
+
+  if (field.contains(selection.anchorNode) || field === selection.anchorNode) {
+    // Insert at cursor
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(pill);
+
+    // Move cursor after pill
+    range.setStartAfter(pill);
+    range.setEndAfter(pill);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    // No cursor in field, append at end
+    field.appendChild(pill);
+  }
+
+  field.focus();
+  updateCommandPreview();
+}
+
+// Insert token text into regular input (for header/footer fields)
+function insertTokenText(input, tokenValue) {
+  const pos = input.selectionStart ?? input.value.length;
+  input.value = input.value.slice(0, pos) + tokenValue + input.value.slice(pos);
+  input.focus();
+  const newPos = pos + tokenValue.length;
+  input.setSelectionRange(newPos, newPos);
+  updateCommandPreview();
+}
+
+// Get text content from a token field (converts pills to token strings)
+function getTokenFieldValue(field) {
+  if (!field) return '';
+
+  // If it's a regular input, just return the value
+  if (field.tagName === 'INPUT') {
+    return field.value;
+  }
+
+  // For contenteditable, traverse children and build string
+  let result = '';
+  field.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      result += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.classList.contains('token-pill')) {
+        result += node.dataset.token;
+      } else {
+        result += node.textContent;
+      }
+    }
+  });
+  return result.trim();
+}
+
+// Set content of a token field, converting token strings to colored pills
+function setTokenFieldValue(field, value) {
+  if (!field) return;
+
+  // Clear current content
+  field.innerHTML = '';
+
+  if (!value) return;
+
+  // Parse value and create pills for tokens
+  const tokenRegex = /(\{[^}]+\})/g;
+  const parts = value.split(tokenRegex);
+
+  parts.forEach(part => {
+    if (part.match(tokenRegex)) {
+      // It's a token - create a pill
+      const pill = createTokenPill(part);
+      field.appendChild(pill);
+    } else if (part) {
+      // Regular text
+      field.appendChild(document.createTextNode(part));
+    }
+  });
+}
 
 function setupTokenDrag() {
   const tokenList = $('tokenList');
@@ -405,32 +527,31 @@ function setupTokenDrag() {
     return;
   }
 
-  // Get all text inputs that can accept tokens
-  const dropTargetIds = [
-    'docTitle', 'docAuthor', 'docDate',
+  // Token fields (contenteditable) - get colored pills
+  const tokenFieldIds = ['docTitle', 'docAuthor', 'docDate'];
+
+  // Regular text inputs - get plain text tokens
+  const textInputIds = [
     'headerLeft', 'headerCenter', 'headerRight',
     'footerLeft', 'footerCenter', 'footerRight',
     'outputName', 'extraArgs'
   ];
 
-  // Track last focused input for token insertion
-  dropTargetIds.forEach(id => {
-    const input = $(id);
-    if (!input) return;
+  const allTargetIds = [...tokenFieldIds, ...textInputIds];
 
-    input.addEventListener('focus', () => {
-      lastFocusedTokenInput = input;
-      highlightTokensInInput(input);
-    });
+  // Track last focused field
+  allTargetIds.forEach(id => {
+    const el = $(id);
+    if (!el) return;
 
-    input.addEventListener('input', () => {
-      highlightTokensInInput(input);
+    el.addEventListener('focus', () => {
+      lastFocusedTokenField = el;
     });
   });
 
-  // Primary: Click on token to insert into last focused input
+  // Primary: Click on token to insert
   const tokens = tokenList.querySelectorAll('[data-token]');
-  console.log(`Setting up ${tokens.length} tokens for drag/drop`);
+  console.log(`Setting up ${tokens.length} tokens for click/drag`);
 
   tokens.forEach(token => {
     // Click handler - primary way to insert tokens
@@ -440,28 +561,37 @@ function setupTokenDrag() {
 
       const tokenValue = token.dataset.token;
 
-      // Find target input: last focused, or first available
-      let targetInput = lastFocusedTokenInput;
-      if (!targetInput || !dropTargetIds.includes(targetInput.id)) {
-        targetInput = $('docTitle'); // Default to title field
+      // Find target field
+      let target = lastFocusedTokenField;
+      if (!target || !allTargetIds.includes(target.id)) {
+        target = $('docTitle'); // Default to title field
       }
 
-      if (targetInput) {
-        const pos = targetInput.selectionStart ?? targetInput.value.length;
-        targetInput.value = targetInput.value.slice(0, pos) + tokenValue + targetInput.value.slice(pos);
-        targetInput.focus();
-        const newPos = pos + tokenValue.length;
-        targetInput.setSelectionRange(newPos, newPos);
-        highlightTokensInInput(targetInput);
-        updateCommandPreview();
+      if (target) {
+        if (tokenFieldIds.includes(target.id)) {
+          // Insert colored pill into contenteditable
+          insertTokenPill(target, tokenValue);
+        } else {
+          // Insert plain text into regular input
+          insertTokenText(target, tokenValue);
+        }
         showToast(`Inserted ${tokenValue}`, 'success');
       }
     });
 
-    // Also support drag and drop
+    // Drag support
     token.setAttribute('draggable', 'true');
 
     token.addEventListener('dragstart', (e) => {
+      const tokenData = JSON.stringify({
+        token: token.dataset.token,
+        color: token.classList.contains('badge-primary') ? 'primary' :
+               token.classList.contains('badge-secondary') ? 'secondary' :
+               token.classList.contains('badge-accent') ? 'accent' :
+               token.classList.contains('badge-info') ? 'info' :
+               token.classList.contains('badge-warning') ? 'warning' : 'primary'
+      });
+      e.dataTransfer.setData('application/json', tokenData);
       e.dataTransfer.setData('text/plain', token.dataset.token);
       e.dataTransfer.effectAllowed = 'copy';
       token.style.opacity = '0.5';
@@ -472,44 +602,44 @@ function setupTokenDrag() {
     });
   });
 
-  // Setup drop targets for drag and drop
-  dropTargetIds.forEach(id => {
-    const input = $(id);
-    if (!input) return;
+  // Setup drop targets
+  allTargetIds.forEach(id => {
+    const el = $(id);
+    if (!el) return;
 
-    input.addEventListener('dragover', (e) => {
+    el.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
-      input.classList.add('ring', 'ring-primary', 'ring-2');
+      el.classList.add('ring', 'ring-primary', 'ring-2');
     });
 
-    input.addEventListener('dragleave', () => {
-      input.classList.remove('ring', 'ring-primary', 'ring-2');
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('ring', 'ring-primary', 'ring-2');
     });
 
-    input.addEventListener('drop', (e) => {
+    el.addEventListener('drop', (e) => {
       e.preventDefault();
-      input.classList.remove('ring', 'ring-primary', 'ring-2');
+      el.classList.remove('ring', 'ring-primary', 'ring-2');
 
-      const tokenValue = e.dataTransfer.getData('text/plain');
+      // Try JSON data first
+      let tokenValue;
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        tokenValue = data.token;
+      } catch {
+        tokenValue = e.dataTransfer.getData('text/plain');
+      }
+
       if (tokenValue && tokenValue.startsWith('{') && tokenValue.endsWith('}')) {
-        const pos = input.selectionStart ?? input.value.length;
-        input.value = input.value.slice(0, pos) + tokenValue + input.value.slice(pos);
-        input.focus();
-        const newPos = pos + tokenValue.length;
-        input.setSelectionRange(newPos, newPos);
-        highlightTokensInInput(input);
-        updateCommandPreview();
+        if (tokenFieldIds.includes(id)) {
+          insertTokenPill(el, tokenValue);
+        } else {
+          insertTokenText(el, tokenValue);
+        }
         showToast(`Inserted ${tokenValue}`, 'success');
       }
     });
   });
-}
-
-// Highlight tokens in input with visual indicator
-function highlightTokensInInput(input) {
-  const hasTokens = /\{[^}]+\}/.test(input.value);
-  input.classList.toggle('has-tokens', hasTokens);
 }
 
 // Replace metadata tokens with actual values
@@ -593,7 +723,7 @@ function buildPandocCommand() {
       args.push(`-V 'urlcolor=[HTML]{${color}}'`);
     }
 
-    // Headers and Footers using fancyhdr
+    // Headers and Footers - only add if user specifies custom content
     const headerLeft = replaceHeaderFooterTokens($('headerLeft').value);
     const headerCenter = replaceHeaderFooterTokens($('headerCenter').value);
     const headerRight = replaceHeaderFooterTokens($('headerRight').value);
@@ -601,61 +731,62 @@ function buildPandocCommand() {
     const footerCenter = replaceHeaderFooterTokens($('footerCenter').value);
     const footerRight = replaceHeaderFooterTokens($('footerRight').value);
 
-    const hasHeaders = headerLeft || headerCenter || headerRight;
-    const hasFooters = footerLeft || footerCenter || footerRight;
+    // Page numbering options
+    const pageFormat = $('pageNumberFormat').value;
+    const pagePosition = $('pageNumberPosition').value;
+    const pageStyle = $('pageNumberStyle').value;
 
-    if (hasHeaders || hasFooters) {
-      // Enable fancyhdr
-      args.push('-V pagestyle=fancy');
-
-      // Build header-includes for fancyhdr
-      let headerIncludes = '\\usepackage{fancyhdr}\\pagestyle{fancy}';
-      headerIncludes += '\\fancyhf{}'; // Clear defaults
-
-      if (headerLeft) headerIncludes += `\\fancyhead[L]{${headerLeft}}`;
-      if (headerCenter) headerIncludes += `\\fancyhead[C]{${headerCenter}}`;
-      if (headerRight) headerIncludes += `\\fancyhead[R]{${headerRight}}`;
-      if (footerLeft) headerIncludes += `\\fancyfoot[L]{${footerLeft}}`;
-      if (footerCenter) headerIncludes += `\\fancyfoot[C]{${footerCenter}}`;
-      if (footerRight) headerIncludes += `\\fancyfoot[R]{${footerRight}}`;
-
-      args.push(`-V header-includes="${headerIncludes}"`);
+    // Build page number string based on format
+    let pageNumStr = '';
+    if (pageFormat === 'page') {
+      pageNumStr = 'Page \\thepage';
+    } else if (pageFormat === 'page-of') {
+      pageNumStr = '\\thepage\\ of \\pageref{LastPage}';
     } else {
-      // Default page numbering based on settings
-      const pageFormat = $('pageNumberFormat').value;
-      const pagePosition = $('pageNumberPosition').value;
-      const pageStyle = $('pageNumberStyle').value;
+      pageNumStr = '\\thepage';
+    }
 
-      let pageCmd = '';
-      if (pageStyle === 'roman') {
-        pageCmd += '\\pagenumbering{roman}';
-      } else if (pageStyle === 'Roman') {
-        pageCmd += '\\pagenumbering{Roman}';
-      }
+    // Determine position for fancyhdr
+    let pageNumPosition = 'C'; // center
+    let pageNumHeader = false;
+    if (pagePosition === 'bottom-center') {
+      pageNumPosition = 'C';
+    } else if (pagePosition === 'bottom-right') {
+      pageNumPosition = 'R';
+    } else if (pagePosition === 'top-right') {
+      pageNumPosition = 'R';
+      pageNumHeader = true;
+    }
 
-      if (pageFormat === 'page-of') {
-        // Use lastpage package for "N of X" format
-        pageCmd += '\\usepackage{lastpage}\\usepackage{fancyhdr}\\pagestyle{fancy}\\fancyhf{}';
-        if (pagePosition === 'bottom-center') {
-          pageCmd += '\\fancyfoot[C]{\\thepage\\ of \\pageref{LastPage}}';
-        } else if (pagePosition === 'bottom-right') {
-          pageCmd += '\\fancyfoot[R]{\\thepage\\ of \\pageref{LastPage}}';
-        } else {
-          pageCmd += '\\fancyhead[R]{\\thepage\\ of \\pageref{LastPage}}';
-        }
-      } else if (pageFormat === 'page') {
-        pageCmd += '\\usepackage{fancyhdr}\\pagestyle{fancy}\\fancyhf{}';
-        if (pagePosition === 'bottom-center') {
-          pageCmd += '\\fancyfoot[C]{Page \\thepage}';
-        } else if (pagePosition === 'bottom-right') {
-          pageCmd += '\\fancyfoot[R]{Page \\thepage}';
-        } else {
-          pageCmd += '\\fancyhead[R]{Page \\thepage}';
-        }
-      }
+    const hasCustomHeadersFooters = headerLeft || headerCenter || headerRight || footerLeft || footerCenter || footerRight;
 
-      if (pageCmd) {
-        args.push(`-V header-includes="${pageCmd}"`);
+    // Always add fancyhdr for page numbering control
+    args.push('-V header-includes="\\usepackage{fancyhdr}"');
+    args.push('-V header-includes="\\usepackage{lastpage}"');
+    args.push('-V header-includes="\\pagestyle{fancy}"');
+    args.push('-V header-includes="\\fancyhf{}"');
+
+    // Page style (arabic, roman, Roman)
+    if (pageStyle === 'roman') {
+      args.push('-V header-includes="\\pagenumbering{roman}"');
+    } else if (pageStyle === 'Roman') {
+      args.push('-V header-includes="\\pagenumbering{Roman}"');
+    }
+
+    // Add custom headers/footers if specified
+    if (headerLeft) args.push(`-V header-includes="\\fancyhead[L]{${headerLeft}}"`);
+    if (headerCenter) args.push(`-V header-includes="\\fancyhead[C]{${headerCenter}}"`);
+    if (headerRight) args.push(`-V header-includes="\\fancyhead[R]{${headerRight}}"`);
+    if (footerLeft) args.push(`-V header-includes="\\fancyfoot[L]{${footerLeft}}"`);
+    if (footerCenter) args.push(`-V header-includes="\\fancyfoot[C]{${footerCenter}}"`);
+    if (footerRight) args.push(`-V header-includes="\\fancyfoot[R]{${footerRight}}"`);
+
+    // Add page number if no custom footer at that position
+    if (!hasCustomHeadersFooters) {
+      if (pageNumHeader) {
+        args.push(`-V header-includes="\\fancyhead[${pageNumPosition}]{${pageNumStr}}"`);
+      } else {
+        args.push(`-V header-includes="\\fancyfoot[${pageNumPosition}]{${pageNumStr}}"`);
       }
     }
   }
@@ -675,10 +806,10 @@ function buildPandocCommand() {
     args.push(`-V linestretch=${$('lineHeight').value}`);
   }
 
-  // Code highlighting (use modern --syntax-highlighting instead of deprecated --highlight-style)
+  // Code highlighting
   const highlightTheme = $('highlightTheme').value;
   if (highlightTheme && highlightTheme !== 'none') {
-    args.push(`--syntax-highlighting=${highlightTheme}`);
+    args.push(`--highlight-style=${highlightTheme}`);
   }
 
   // TOC
@@ -706,10 +837,10 @@ function buildPandocCommand() {
     args.push('-N');
   }
 
-  // Metadata with token replacement
-  const title = replaceMetadataTokens($('docTitle').value);
-  const author = replaceMetadataTokens($('docAuthor').value);
-  const date = replaceMetadataTokens($('docDate').value);
+  // Metadata with token replacement (use getTokenFieldValue for contenteditable)
+  const title = replaceMetadataTokens(getTokenFieldValue($('docTitle')));
+  const author = replaceMetadataTokens(getTokenFieldValue($('docAuthor')));
+  const date = replaceMetadataTokens(getTokenFieldValue($('docDate')));
 
   if (title) args.push(`-M title="${title}"`);
   if (author) args.push(`-M author="${author}"`);
@@ -804,6 +935,25 @@ function setupConversion() {
       return;
     }
 
+    const outName = $('outputName').value || 'output';
+    const ext = getExtensionForFormat($('outputFormat').value);
+    const finalPath = (outputDirPath || './') + outName + '.' + ext;
+
+    // Check if file exists and confirm overwrite
+    if (isTauri) {
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const exists = await invoke('file_exists', { path: finalPath });
+        if (exists) {
+          if (!confirm(`File "${outName}.${ext}" already exists. Overwrite?`)) {
+            return;
+          }
+        }
+      } catch (e) {
+        console.log('Could not check file existence:', e);
+      }
+    }
+
     $('statusArea').classList.remove('hidden');
     $('statusText').textContent = 'Converting...';
     $('progressBar').removeAttribute('value'); // Indeterminate
@@ -821,9 +971,6 @@ function setupConversion() {
 
         // Open file if checkbox is checked
         if ($('openOnComplete').checked) {
-          const outName = $('outputName').value || 'output';
-          const ext = getExtensionForFormat($('outputFormat').value);
-          const finalPath = (outputDirPath || './') + outName + '.' + ext;
           await invoke('open_file', { path: finalPath });
         }
       } else {
@@ -887,12 +1034,22 @@ function getSettingsIds() {
   ];
 }
 
+// Contenteditable fields that need special handling
+const contenteditableIds = ['docTitle', 'docAuthor', 'docDate'];
+
 function getCurrentSettings() {
   const settings = {};
   getSettingsIds().forEach(id => {
     const el = $(id);
     if (el) {
-      settings[id] = el.type === 'checkbox' ? el.checked : el.value;
+      if (el.type === 'checkbox') {
+        settings[id] = el.checked;
+      } else if (contenteditableIds.includes(id)) {
+        // For contenteditable, get the text value
+        settings[id] = getTokenFieldValue(el);
+      } else {
+        settings[id] = el.value;
+      }
     }
   });
   // Also save mermaid format radio
@@ -907,6 +1064,9 @@ function applySettings(settings) {
     if (el && settings[id] !== undefined) {
       if (el.type === 'checkbox') {
         el.checked = settings[id];
+      } else if (contenteditableIds.includes(id)) {
+        // For contenteditable, set textContent and recreate pills for tokens
+        setTokenFieldValue(el, settings[id]);
       } else {
         el.value = settings[id];
       }
@@ -1186,11 +1346,42 @@ async function checkDependencies() {
   results.querySelectorAll('.install-dep-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       const cmd = btn.dataset.cmd;
-      try {
-        await navigator.clipboard.writeText(cmd);
-        showToast(`Command copied: ${cmd}`, 'success');
-      } catch (e) {
-        showToast('Failed to copy command', 'error');
+
+      if (isTauri) {
+        // Try to run the install command
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Installing...';
+
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('run_pandoc', { command: cmd });
+          btn.textContent = 'Installed!';
+          btn.classList.remove('btn-primary', 'btn-secondary', 'btn-accent', 'btn-info');
+          btn.classList.add('btn-success');
+          showToast(`Successfully installed with: ${cmd}`, 'success');
+
+          // Refresh dependencies check after 1 second
+          setTimeout(() => checkDependencies(), 1000);
+        } catch (e) {
+          btn.textContent = originalText;
+          btn.disabled = false;
+          // Try clipboard as fallback
+          try {
+            await navigator.clipboard.writeText(cmd);
+            showToast(`Install failed. Command copied: ${cmd}`, 'warning');
+          } catch {
+            showToast(`Install failed: ${e}`, 'error');
+          }
+        }
+      } else {
+        // Web mode - just copy to clipboard
+        try {
+          await navigator.clipboard.writeText(cmd);
+          showToast(`Command copied: ${cmd}`, 'success');
+        } catch (e) {
+          showToast('Failed to copy command', 'error');
+        }
       }
     });
   });
@@ -1244,10 +1435,10 @@ function resetToDefaults() {
   $('documentClass').value = 'article';
   $('topLevelDiv').value = 'default';
 
-  // Content
-  $('docTitle').value = '';
-  $('docAuthor').value = '';
-  $('docDate').value = '';
+  // Content (use innerHTML for contenteditable fields)
+  $('docTitle').innerHTML = '';
+  $('docAuthor').innerHTML = '';
+  $('docDate').innerHTML = '';
   $('headerLeft').value = '';
   $('headerCenter').value = '';
   $('headerRight').value = '';
@@ -1301,19 +1492,73 @@ function setupPdfEngineDropdown() {
   });
 }
 
-// Setup FAB submenu mutual exclusion - only one open at a time
-function setupFabSubmenus() {
-  const fabDetails = document.querySelectorAll('.dropdown-content details');
-  fabDetails.forEach(detail => {
-    detail.addEventListener('toggle', () => {
-      if (detail.open) {
-        // Close other details
-        fabDetails.forEach(other => {
-          if (other !== detail && other.open) {
-            other.open = false;
-          }
-        });
-      }
+// Setup custom FAB menu with accordion submenus
+function setupFabMenu2() {
+  const fabContainer = $('fabContainer');
+  const fabToggle = $('fabToggle');
+  const fabMenu = $('fabMenu');
+  if (!fabContainer || !fabToggle || !fabMenu) return;
+
+  const closeMenu = () => {
+    fabContainer.classList.remove('open');
+    fabMenu.querySelectorAll('.fab-accordion').forEach(acc => {
+      acc.classList.remove('open');
+    });
+  };
+
+  // Toggle main menu on button click
+  fabToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (fabContainer.classList.contains('open')) {
+      closeMenu();
+    } else {
+      fabContainer.classList.add('open');
+    }
+  });
+
+  // Close menu when clicking outside (but not on select dropdown options)
+  document.addEventListener('click', (e) => {
+    // Don't close if clicking inside the fab container
+    if (fabContainer.contains(e.target)) {
+      return;
+    }
+    closeMenu();
+  });
+
+  // Prevent clicks inside the menu from bubbling up
+  fabMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Setup accordion triggers - click only, allow multiple open
+  const accordions = fabMenu.querySelectorAll('.fab-accordion');
+  accordions.forEach(accordion => {
+    const trigger = accordion.querySelector('.fab-accordion-trigger');
+    if (!trigger) return;
+
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Simply toggle this accordion (allow multiple open)
+      accordion.classList.toggle('open');
+    });
+  });
+
+  // Close menu after clicking certain action items
+  const closeActions = ['fabCheckDeps', 'fabResetDefaults', 'fabCopyCmd'];
+  closeActions.forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.addEventListener('click', () => {
+        setTimeout(closeMenu, 100);
+      });
+    }
+  });
+
+  // Theme items should close menu
+  fabMenu.querySelectorAll('[data-set-theme]').forEach(link => {
+    link.addEventListener('click', () => {
+      setTimeout(closeMenu, 100);
     });
   });
 }
@@ -1336,7 +1581,7 @@ async function init() {
   setupPresets();
   setupFabMenu();
   setupPdfEngineDropdown();
-  setupFabSubmenus();
+  setupFabMenu2();
 
   // Initial format change to set up visibility
   handleFormatChange();
