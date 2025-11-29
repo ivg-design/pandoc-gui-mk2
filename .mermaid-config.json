@@ -1,14 +1,27 @@
 {
   "theme": "default",
+  "fontFamily": "Arial, Helvetica, sans-serif",
   "flowchart": {
     "htmlLabels": false,
-    "useMaxWidth": true
+    "useMaxWidth": true,
+    "curve": "linear"
   },
   "sequence": {
+    "htmlLabels": false
+  },
+  "classDiagram": {
+    "htmlLabels": false
+  },
+  "stateDiagram": {
+    "htmlLabels": false
+  },
+  "state": {
     "htmlLabels": false
   },
   "gantt": {
     "useWidth": undefined
   },
-  "securityLevel": "loose"
+  "securityLevel": "loose",
+  "startOnLoad": true,
+  "logLevel": "fatal"
 }

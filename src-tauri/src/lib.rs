@@ -125,10 +125,18 @@ fn run_pandoc(command: String) -> Result<String, String> {
         }
     }
 
+    // Detect output format from command to optimize mermaid rendering
+    // PDF doesn't embed SVG well, so use PNG for PDF, SVG for HTML
+    let mermaid_format = if command.contains("-t pdf") || command.contains("-t=pdf") {
+        "png"  // PNG embeds better in PDF
+    } else {
+        "svg"  // SVG is better for HTML/EPUB
+    };
+
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", &command])
-            .env("MERMAID_FILTER_FORMAT", "svg")
+            .env("MERMAID_FILTER_FORMAT", mermaid_format)
             .env("MERMAID_FILTER_BACKGROUND", "transparent")
             .output()
     } else {
@@ -139,8 +147,8 @@ fn run_pandoc(command: String) -> Result<String, String> {
             .current_dir(&home)
             // Redirect mermaid-filter error log to temp directory
             .env("MERMAID_FILTER_ERR", temp_dir.join("mermaid-filter.err"))
-            // Configure mermaid-filter to use SVG with transparent background
-            .env("MERMAID_FILTER_FORMAT", "svg")
+            // Configure mermaid-filter format based on output type
+            .env("MERMAID_FILTER_FORMAT", mermaid_format)
             .env("MERMAID_FILTER_BACKGROUND", "transparent")
             .output()
     };
