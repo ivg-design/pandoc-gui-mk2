@@ -309,42 +309,40 @@ input.drag-over {
   pointer-events: none;
 }
 
-/* Token pill inside field */
+/* Token pill inside field - match DaisyUI badge styling */
 .token-field .token-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.125rem 0.375rem;
+  padding: 0 0.4rem;
   border-radius: 0.25rem;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
   white-space: nowrap;
   user-select: none;
   cursor: default;
+  vertical-align: baseline;
+  line-height: 1.4;
+  height: 1.1rem;
 }
 .token-field .token-pill.token-primary {
-  background-color: oklch(var(--p) / 0.2);
-  color: oklch(var(--p));
-  border: 1px solid oklch(var(--p) / 0.3);
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
 }
 .token-field .token-pill.token-secondary {
-  background-color: oklch(var(--s) / 0.2);
-  color: oklch(var(--s));
-  border: 1px solid oklch(var(--s) / 0.3);
+  background-color: var(--color-secondary);
+  color: var(--color-secondary-content);
 }
 .token-field .token-pill.token-accent {
-  background-color: oklch(var(--a) / 0.2);
-  color: oklch(var(--a));
-  border: 1px solid oklch(var(--a) / 0.3);
+  background-color: var(--color-accent);
+  color: var(--color-accent-content);
 }
 .token-field .token-pill.token-info {
-  background-color: oklch(var(--in) / 0.2);
-  color: oklch(var(--in));
-  border: 1px solid oklch(var(--in) / 0.3);
+  background-color: var(--color-info);
+  color: var(--color-info-content);
 }
 .token-field .token-pill.token-warning {
-  background-color: oklch(var(--wa) / 0.2);
-  color: oklch(var(--wa));
-  border: 1px solid oklch(var(--wa) / 0.3);
+  background-color: var(--color-warning);
+  color: var(--color-warning-content);
 }
 
 /* Remove button on token pill */
@@ -393,14 +391,26 @@ input.drag-over {
   transform: rotate(180deg);
 }
 
-/* Badge click cursor */
+/* Token drag and drop */
 #tokenList .badge {
-  cursor: pointer !important;
+  cursor: grab !important;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 #tokenList .badge:hover {
   filter: brightness(1.1);
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
-#tokenList .badge:active {
-  transform: scale(0.98);
+#tokenList .badge:active,
+#tokenList .badge.dragging {
+  cursor: grabbing !important;
+  transform: scale(0.95);
+  opacity: 0.6;
+}
+
+/* Drop zone highlight for all droppable fields */
+.drop-active {
+  outline: 2px dashed var(--color-primary) !important;
+  outline-offset: -2px !important;
+  background-color: color-mix(in oklch, var(--color-primary) 10%, transparent) !important;
 }

@@ -528,14 +528,14 @@ function setupTokenDrag() {
   }
 
   // Token fields (contenteditable) - get colored pills
-  const tokenFieldIds = ['docTitle', 'docAuthor', 'docDate'];
+  const tokenFieldIds = [
+    'docTitle', 'docAuthor', 'docDate',
+    'headerLeft', 'headerCenter', 'headerRight',
+    'footerLeft', 'footerCenter', 'footerRight'
+  ];
 
   // Regular text inputs - get plain text tokens
-  const textInputIds = [
-    'headerLeft', 'headerCenter', 'headerRight',
-    'footerLeft', 'footerCenter', 'footerRight',
-    'outputName', 'extraArgs'
-  ];
+  const textInputIds = ['outputName', 'extraArgs'];
 
   const allTargetIds = [...tokenFieldIds, ...textInputIds];
 
@@ -543,99 +543,155 @@ function setupTokenDrag() {
   allTargetIds.forEach(id => {
     const el = $(id);
     if (!el) return;
-
     el.addEventListener('focus', () => {
       lastFocusedTokenField = el;
     });
   });
 
-  // Primary: Click on token to insert
+  // Get all tokens
   const tokens = tokenList.querySelectorAll('[data-token]');
-  console.log(`Setting up ${tokens.length} tokens for click/drag`);
 
+  // Click handler for tokens - insert into last focused field
   tokens.forEach(token => {
-    // Click handler - primary way to insert tokens
     token.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-
       const tokenValue = token.dataset.token;
-
-      // Find target field
       let target = lastFocusedTokenField;
       if (!target || !allTargetIds.includes(target.id)) {
-        target = $('docTitle'); // Default to title field
+        target = $('docTitle');
       }
-
       if (target) {
         if (tokenFieldIds.includes(target.id)) {
-          // Insert colored pill into contenteditable
           insertTokenPill(target, tokenValue);
         } else {
-          // Insert plain text into regular input
           insertTokenText(target, tokenValue);
         }
         showToast(`Inserted ${tokenValue}`, 'success');
       }
     });
 
-    // Drag support
+    // Setup drag - native HTML5 drag and drop
     token.setAttribute('draggable', 'true');
 
     token.addEventListener('dragstart', (e) => {
-      const tokenData = JSON.stringify({
-        token: token.dataset.token,
-        color: token.classList.contains('badge-primary') ? 'primary' :
-               token.classList.contains('badge-secondary') ? 'secondary' :
-               token.classList.contains('badge-accent') ? 'accent' :
-               token.classList.contains('badge-info') ? 'info' :
-               token.classList.contains('badge-warning') ? 'warning' : 'primary'
-      });
-      e.dataTransfer.setData('application/json', tokenData);
       e.dataTransfer.setData('text/plain', token.dataset.token);
       e.dataTransfer.effectAllowed = 'copy';
-      token.style.opacity = '0.5';
+      token.classList.add('dragging');
+
+      // Create a custom drag image
+      const dragImage = token.cloneNode(true);
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-1000px';
+      dragImage.style.transform = 'scale(1.2)';
+      document.body.appendChild(dragImage);
+      e.dataTransfer.setDragImage(dragImage, dragImage.offsetWidth / 2, dragImage.offsetHeight / 2);
+      setTimeout(() => dragImage.remove(), 0);
     });
 
     token.addEventListener('dragend', () => {
-      token.style.opacity = '1';
+      token.classList.remove('dragging');
     });
   });
 
-  // Setup drop targets
-  allTargetIds.forEach(id => {
-    const el = $(id);
-    if (!el) return;
+  // Setup drop targets for contenteditable fields (colored pills)
+  tokenFieldIds.forEach(id => {
+    const field = $(id);
+    if (!field) {
+      console.error('Token field not found:', id);
+      return;
+    }
+    console.log('Setting up drop target for:', id);
 
-    el.addEventListener('dragover', (e) => {
+    // Use capture phase to intercept before contenteditable's default behavior
+    field.addEventListener('dragover', (e) => {
       e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
       e.dataTransfer.dropEffect = 'copy';
-      el.classList.add('ring', 'ring-primary', 'ring-2');
-    });
+      field.classList.add('drop-active');
+    }, true);
 
-    el.addEventListener('dragleave', () => {
-      el.classList.remove('ring', 'ring-primary', 'ring-2');
-    });
-
-    el.addEventListener('drop', (e) => {
+    field.addEventListener('dragenter', (e) => {
       e.preventDefault();
-      el.classList.remove('ring', 'ring-primary', 'ring-2');
+      e.stopPropagation();
+      field.classList.add('drop-active');
+    }, true);
 
-      // Try JSON data first
-      let tokenValue;
-      try {
-        const data = JSON.parse(e.dataTransfer.getData('application/json'));
-        tokenValue = data.token;
-      } catch {
-        tokenValue = e.dataTransfer.getData('text/plain');
+    field.addEventListener('dragleave', (e) => {
+      if (!field.contains(e.relatedTarget)) {
+        field.classList.remove('drop-active');
       }
+    }, true);
+
+    field.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      field.classList.remove('drop-active');
+
+      const tokenValue = e.dataTransfer.getData('text/plain');
 
       if (tokenValue && tokenValue.startsWith('{') && tokenValue.endsWith('}')) {
-        if (tokenFieldIds.includes(id)) {
-          insertTokenPill(el, tokenValue);
-        } else {
-          insertTokenText(el, tokenValue);
-        }
+        // Create colored pill
+        const pill = createTokenPill(tokenValue);
+
+        // Use requestAnimationFrame to run after browser's default behavior
+        requestAnimationFrame(() => {
+          // Find and remove any plain text nodes containing the token
+          // BUT only text nodes that are direct children of field, not inside pills
+          const nodesToFix = [];
+          field.childNodes.forEach(node => {
+            if (node.nodeType === Node.TEXT_NODE && node.textContent.includes(tokenValue)) {
+              nodesToFix.push(node);
+            }
+          });
+          nodesToFix.forEach(textNode => {
+            textNode.textContent = textNode.textContent.split(tokenValue).join('');
+            // Remove empty text nodes
+            if (!textNode.textContent.trim()) {
+              textNode.remove();
+            }
+          });
+
+          // Append pill
+          field.appendChild(pill);
+
+          field.focus();
+          updateCommandPreview();
+          showToast(`Inserted ${tokenValue}`, 'success');
+        });
+      }
+    }, true); // Capture phase
+  });
+
+  // Setup drop targets for regular text inputs
+  textInputIds.forEach(id => {
+    const input = $(id);
+    if (!input) return;
+
+    input.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      input.classList.add('drop-active');
+    });
+
+    input.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      input.classList.add('drop-active');
+    });
+
+    input.addEventListener('dragleave', () => {
+      input.classList.remove('drop-active');
+    });
+
+    input.addEventListener('drop', (e) => {
+      e.preventDefault();
+      input.classList.remove('drop-active');
+
+      const tokenValue = e.dataTransfer.getData('text/plain');
+      if (tokenValue && tokenValue.startsWith('{') && tokenValue.endsWith('}')) {
+        insertTokenText(input, tokenValue);
         showToast(`Inserted ${tokenValue}`, 'success');
       }
     });
@@ -724,12 +780,12 @@ function buildPandocCommand() {
     }
 
     // Headers and Footers - only add if user specifies custom content
-    const headerLeft = replaceHeaderFooterTokens($('headerLeft').value);
-    const headerCenter = replaceHeaderFooterTokens($('headerCenter').value);
-    const headerRight = replaceHeaderFooterTokens($('headerRight').value);
-    const footerLeft = replaceHeaderFooterTokens($('footerLeft').value);
-    const footerCenter = replaceHeaderFooterTokens($('footerCenter').value);
-    const footerRight = replaceHeaderFooterTokens($('footerRight').value);
+    const headerLeft = replaceHeaderFooterTokens(getTokenFieldValue($('headerLeft')));
+    const headerCenter = replaceHeaderFooterTokens(getTokenFieldValue($('headerCenter')));
+    const headerRight = replaceHeaderFooterTokens(getTokenFieldValue($('headerRight')));
+    const footerLeft = replaceHeaderFooterTokens(getTokenFieldValue($('footerLeft')));
+    const footerCenter = replaceHeaderFooterTokens(getTokenFieldValue($('footerCenter')));
+    const footerRight = replaceHeaderFooterTokens(getTokenFieldValue($('footerRight')));
 
     // Page numbering options
     const pageFormat = $('pageNumberFormat').value;
@@ -1035,7 +1091,11 @@ function getSettingsIds() {
 }
 
 // Contenteditable fields that need special handling
-const contenteditableIds = ['docTitle', 'docAuthor', 'docDate'];
+const contenteditableIds = [
+  'docTitle', 'docAuthor', 'docDate',
+  'headerLeft', 'headerCenter', 'headerRight',
+  'footerLeft', 'footerCenter', 'footerRight'
+];
 
 function getCurrentSettings() {
   const settings = {};
@@ -1439,12 +1499,12 @@ function resetToDefaults() {
   $('docTitle').innerHTML = '';
   $('docAuthor').innerHTML = '';
   $('docDate').innerHTML = '';
-  $('headerLeft').value = '';
-  $('headerCenter').value = '';
-  $('headerRight').value = '';
-  $('footerLeft').value = '';
-  $('footerCenter').value = '';
-  $('footerRight').value = '';
+  $('headerLeft').innerHTML = '';
+  $('headerCenter').innerHTML = '';
+  $('headerRight').innerHTML = '';
+  $('footerLeft').innerHTML = '';
+  $('footerCenter').innerHTML = '';
+  $('footerRight').innerHTML = '';
   $('pageNumberFormat').value = 'page';
   $('pageNumberPosition').value = 'bottom-center';
   $('pageNumberStyle').value = 'arabic';
