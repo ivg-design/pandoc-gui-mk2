@@ -101,6 +101,8 @@ fn run_pandoc(command: String) -> Result<String, String> {
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", &command])
+            .env("MERMAID_FILTER_FORMAT", "svg")
+            .env("MERMAID_FILTER_BACKGROUND", "transparent")
             .output()
     } else {
         Command::new("sh")
@@ -110,6 +112,9 @@ fn run_pandoc(command: String) -> Result<String, String> {
             .current_dir(&home)
             // Redirect mermaid-filter error log to temp directory
             .env("MERMAID_FILTER_ERR", temp_dir.join("mermaid-filter.err"))
+            // Configure mermaid-filter to use SVG with transparent background
+            .env("MERMAID_FILTER_FORMAT", "svg")
+            .env("MERMAID_FILTER_BACKGROUND", "transparent")
             .output()
     };
 

@@ -928,23 +928,12 @@ function buildPandocCommand() {
   if (author) args.push(`-M author="${author}"`);
   if (date) args.push(`-M date="${date}"`);
 
-  // Mermaid filter - always use SVG for better quality and scalability
+  // Mermaid filter - configured via environment variables in Rust backend
   const hasMermaid = !$('mermaidDetected').classList.contains('hidden');
   if (hasMermaid) {
     args.push('-F mermaid-filter');
-    // Always use SVG format (more scalable than PNG for small diagrams)
-    args.push('-M mermaid-format=svg');
-    // Configure theme and background based on dark mode
-    const isDarkMode = $('darkMode') && $('darkMode').checked;
-    if (isDarkMode) {
-      // Dark mode: use dark theme with transparent background
-      args.push('-M mermaid-theme=dark');
-      args.push('-M mermaid-background=transparent');
-    } else {
-      // Light mode: use default theme with transparent background
-      args.push('-M mermaid-theme=default');
-      args.push('-M mermaid-background=transparent');
-    }
+    // Note: mermaid-filter is configured via MERMAID_FILTER_* environment variables
+    // in the Rust backend to use SVG format with transparent background
   }
 
   // Dark mode for HTML/EPUB
@@ -1053,7 +1042,8 @@ function setupConversion() {
 
     $('statusArea').classList.remove('hidden');
     $('statusText').textContent = 'Converting...';
-    $('progressBar').removeAttribute('value'); // Indeterminate
+    $('progressBar').max = 100;
+    $('progressBar').value = 10;
     $('convertBtn').disabled = true;
 
     try {
@@ -1063,6 +1053,8 @@ function setupConversion() {
 
         // Handle dark mode header file for PDF
         if (command.includes('--DARK-MODE-PLACEHOLDER--')) {
+          $('progressBar').value = 25;
+          $('statusText').textContent = 'Preparing dark mode...';
           console.log('Dark mode detected, writing header file...');
           const headerPath = await invoke('write_dark_mode_header');
           console.log('Dark mode header written to:', headerPath);
@@ -1078,10 +1070,16 @@ function setupConversion() {
           throw new Error('Dark mode header placeholder was not properly replaced. Please try disabling dark mode or contact support.');
         }
 
+        $('progressBar').value = 50;
+        $('statusText').textContent = 'Running pandoc...';
         await invoke('run_pandoc', { command });
 
-        $('statusText').textContent = 'Conversion complete!';
-        $('progressBar').value = 100;
+        $('progressBar').value = 90;
+        $('statusText').textContent = 'Finalizing...';
+        setTimeout(() => {
+          $('statusText').textContent = 'Conversion complete!';
+          $('progressBar').value = 100;
+        }, 200);
         showToast('Document converted successfully!', 'success');
 
         // Open file if checkbox is checked
