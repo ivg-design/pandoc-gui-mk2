@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - BasicTeX (~100MB) instead of full MacTeX (~4GB)
   - Consolidated lualatex/xelatex/pdflatex into single "texlive" dependency
   - Install via Homebrew (macOS) or apt (Linux)
+- **Mermaid Diagram Enhancements**:
+  - Smart format selection: PDF diagrams → PDF format (crisp, perfect embedding), HTML diagrams → SVG format (scalable, lightweight)
+  - Mermaid configuration file with proper rendering settings
+  - Automatic disabling of htmlLabels for all diagram types
+  - SVG text rendering for consistency
+  - Environment-based configuration for mermaid-filter
 - **Dark Mode Output**:
   - New "Dark Mode" checkbox in Document tab
   - Generates PDF with dark background (#1e1e2e) and light text (#cdd6f4)
@@ -64,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TeX Live paths
 
 ### Fixed
+- **Mermaid Diagram Rendering in PDF**: Fixed invisible/blank mermaid diagrams in PDF by using native PDF format instead of SVG
+- **Dark Mode Placeholder Handling**: Added safety checks and improved error messages for dark mode header file generation
+- **Conversion Progress Indication**: Added step-by-step progress updates (10%, 25%, 50%, 90%, 100%) instead of indeterminate spinner
+- **Duplicate Color Variables**: Fixed conflicting link color assignments when both custom colors and dark mode were enabled
 - **Tauri Drag-Drop**: Set `dragDropEnabled: false` in Tauri config to allow JavaScript to handle drag-drop instead of native WebView interception
 - **mermaid-filter Detection**: Changed from `--version` flag (which errors) to `which mermaid-filter`
 - **Uninstall Confirmation**: Now uses native Tauri dialog that properly blocks until user responds
