@@ -1,168 +1,269 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-/* Custom scrollbar */
+/* Custom dim theme */
+@plugin "daisyui/theme" {
+  name: "dim";
+  default: true;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(30.857% 0.023 264.149);
+  --color-base-200: oklch(28.036% 0.019 264.182);
+  --color-base-300: oklch(26.346% 0.018 262.177);
+  --color-base-content: oklch(82.901% 0.031 222.959);
+  --color-primary: oklch(86.133% 0.141 139.549);
+  --color-primary-content: oklch(17.226% 0.028 139.549);
+  --color-secondary: oklch(73.375% 0.165 35.353);
+  --color-secondary-content: oklch(14.675% 0.033 35.353);
+  --color-accent: oklch(74.229% 0.133 311.379);
+  --color-accent-content: oklch(14.845% 0.026 311.379);
+  --color-neutral: oklch(24.731% 0.02 264.094);
+  --color-neutral-content: oklch(82.901% 0.031 222.959);
+  --color-info: oklch(86.078% 0.142 206.182);
+  --color-info-content: oklch(17.215% 0.028 206.182);
+  --color-success: oklch(86.171% 0.142 166.534);
+  --color-success-content: oklch(17.234% 0.028 166.534);
+  --color-warning: oklch(86.163% 0.142 94.818);
+  --color-warning-content: oklch(17.232% 0.028 94.818);
+  --color-error: oklch(82.418% 0.099 33.756);
+  --color-error-content: oklch(16.483% 0.019 33.756);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.3125rem;
+  --size-field: 0.21875rem;
+  --border: 0.5px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* Nord theme */
+@plugin "daisyui/theme" {
+  name: "nord";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(27.87% 0.02 257.71);
+  --color-base-200: oklch(24.83% 0.018 257.2);
+  --color-base-300: oklch(22.28% 0.017 256.8);
+  --color-base-content: oklch(92.63% 0.01 262.7);
+  --color-primary: oklch(71.29% 0.092 209.42);
+  --color-primary-content: oklch(20% 0.02 209.42);
+  --color-secondary: oklch(74.59% 0.072 280.28);
+  --color-secondary-content: oklch(20% 0.02 280.28);
+  --color-accent: oklch(73.56% 0.113 185.61);
+  --color-accent-content: oklch(20% 0.02 185.61);
+  --color-neutral: oklch(32.47% 0.024 258.26);
+  --color-neutral-content: oklch(92.63% 0.01 262.7);
+  --color-info: oklch(71.29% 0.092 209.42);
+  --color-success: oklch(72.47% 0.137 150.61);
+  --color-warning: oklch(80.07% 0.136 81.23);
+  --color-error: oklch(65.19% 0.163 20.94);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+}
+
+/* Dracula theme */
+@plugin "daisyui/theme" {
+  name: "dracula";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(27.53% 0.048 290.63);
+  --color-base-200: oklch(24.03% 0.042 290.63);
+  --color-base-300: oklch(21.03% 0.037 290.63);
+  --color-base-content: oklch(96.38% 0.015 290.63);
+  --color-primary: oklch(73.74% 0.194 323.62);
+  --color-primary-content: oklch(20% 0.02 323.62);
+  --color-secondary: oklch(80.02% 0.12 140.17);
+  --color-secondary-content: oklch(20% 0.02 140.17);
+  --color-accent: oklch(82.52% 0.16 185.83);
+  --color-accent-content: oklch(20% 0.02 185.83);
+  --color-neutral: oklch(31.53% 0.054 290.63);
+  --color-neutral-content: oklch(96.38% 0.015 290.63);
+  --color-info: oklch(76.45% 0.145 199.97);
+  --color-success: oklch(80.02% 0.12 140.17);
+  --color-warning: oklch(89.13% 0.14 93.22);
+  --color-error: oklch(69.8% 0.196 17.31);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+}
+
+/* Sunset theme */
+@plugin "daisyui/theme" {
+  name: "sunset";
+  default: false;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(22.05% 0.04 25);
+  --color-base-200: oklch(18.05% 0.035 25);
+  --color-base-300: oklch(15.05% 0.03 25);
+  --color-base-content: oklch(92% 0.04 60);
+  --color-primary: oklch(65% 0.2 25);
+  --color-primary-content: oklch(95% 0.02 25);
+  --color-secondary: oklch(70% 0.17 45);
+  --color-secondary-content: oklch(15% 0.02 45);
+  --color-accent: oklch(75% 0.15 70);
+  --color-accent-content: oklch(15% 0.02 70);
+  --color-neutral: oklch(26.05% 0.045 25);
+  --color-neutral-content: oklch(92% 0.04 60);
+  --color-info: oklch(70% 0.12 220);
+  --color-success: oklch(72% 0.15 145);
+  --color-warning: oklch(80% 0.16 80);
+  --color-error: oklch(60% 0.22 15);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: oklch(var(--bc) / 0.3);
+  background: oklch(var(--bc) / 0.25);
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(var(--bc) / 0.5);
-}
-
-/* Tab styling with tabs-box */
-.tabs.tabs-box {
-  border-bottom: 2px solid oklch(var(--bc) / 0.1);
-}
-
-.tabs.tabs-box .tab {
-  @apply border-b-2 border-transparent px-4 py-2 font-medium text-sm;
-  transition: all 0.2s ease;
-}
-
-.tabs.tabs-box .tab:hover {
-  @apply border-b-primary/50 bg-base-content/5;
-}
-
-.tabs.tabs-box .tab[aria-selected="true"],
-.tabs.tabs-box .tab:checked {
-  @apply border-b-primary text-primary bg-transparent;
-}
-
-.tab-content {
-  @apply rounded-none;
-}
-
-/* Fixed tab height to prevent resizing */
-.tab-content {
-  min-height: 600px;
-  max-height: 600px;
-}
-
-/* Tooltip improvements - larger and more visible */
-.tooltip {
-  @apply font-semibold text-xs;
-}
-
-.tooltip::before {
-  max-width: 320px;
-  white-space: normal;
-  text-align: left;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  padding: 0.5rem;
-}
-
-.tooltip[data-tip] {
-  @apply tooltip-right;
-}
-
-.tooltip-right::before {
-  @apply bg-primary text-primary-content;
-}
-
-/* Info icon styling */
-.text-info.cursor-help {
-  @apply cursor-help hover:scale-125 transition-transform;
+  background: oklch(var(--bc) / 0.4);
 }
 
 /* Code preview styling */
 #codePreview {
-  border: 1px solid oklch(var(--bc) / 0.1);
-  line-height: 1.4;
-  min-height: 120px;
+  line-height: 1.5;
+}
+#codePreview .kw {
+  font-weight: 600;
+}
+#codePreview .cm {
+  font-style: italic;
+  opacity: 0.8;
 }
 
-/* Form control compact spacing */
+/* Token badges - draggable */
+.badge[draggable="true"] {
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.badge[draggable="true"]:hover {
+  transform: translateY(-1px);
+}
+.badge[draggable="true"]:active {
+  cursor: grabbing;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Input drop target highlight */
+input.drag-over {
+  outline: 2px solid oklch(var(--p));
+  outline-offset: 2px;
+}
+
+/* Card styling */
+.card {
+  border: 1px solid oklch(var(--bc) / 0.1);
+}
+
+/* Tab content */
+.tab-content {
+  border-top: none;
+}
+
+/* Collapsed section styling */
+.collapse-title {
+  font-weight: 500;
+}
+
+/* Toast container */
+.toast {
+  z-index: 100;
+}
+
+/* Divider adjustments - smaller gaps */
+.divider {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Form control consistency */
 .form-control .label {
-  padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
 
-/* Dropdown styling */
-.dropdown-content {
-  @apply bg-base-300 border border-base-content/10;
+/* Join button disabled state for units */
+.join .btn-disabled {
+  background: oklch(var(--b2));
+  color: oklch(var(--bc) / 0.7);
+  cursor: default;
 }
 
-.dropdown-content li a {
-  @apply px-3 py-2 rounded text-sm;
+/* Smaller card spacing */
+.space-y-4 {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.75rem * (1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
 }
 
-.dropdown-content li a:hover {
-  @apply bg-primary/10 text-primary;
+/* Align form controls to bottom */
+.form-control.align-bottom {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
-/* Preset buttons styling */
-.btn-outline:hover {
-  @apply border-primary text-primary;
+/* Toggle container styling */
+.toggle-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
 }
 
-/* Command preview scrollable area */
-#commandPreview {
-  max-height: 300px;
-  overflow-y: auto;
+
+/* Tooltip custom width */
+.tooltip-wide::before {
+  max-width: 280px;
+  white-space: normal;
 }
 
-/* Grid layout optimizations */
-.grid {
-  @apply gap-2;
+/* Tooltip icon hover effect */
+.tooltip svg {
+  transition: transform 0.15s ease;
+}
+.tooltip:hover svg {
+  transform: scale(1.1);
 }
 
-/* Divider styling */
-.divider {
-  @apply my-2 opacity-30;
+/* Token pill styling in inputs - highlight tokens with background */
+.token-input {
+  position: relative;
 }
 
-/* Status area */
-#statusArea {
-  @apply p-3 bg-base-300/50 rounded;
+/* Token highlighting - adds colored background to tokens in text */
+.has-tokens {
+  background-image: linear-gradient(90deg,
+    oklch(var(--p) / 0.15) 0%,
+    oklch(var(--p) / 0.15) 100%);
+  background-size: auto;
 }
 
-/* Progress bar */
-.progress {
-  height: 0.5rem;
+/* Dragging token ghost */
+.dragging-token {
+  opacity: 0.5;
+  transform: scale(1.05);
 }
 
-/* Token reference box */
-.text-xs.bg-base-300 {
-  @apply border border-base-content/10;
-}
-
-/* Checkbox and radio sizes */
-.checkbox-xs,
-.radio-xs {
-  @apply h-3 w-3;
-}
-
-.checkbox-sm,
-.radio-sm {
-  @apply h-4 w-4;
-}
-
-/* Input sizing */
-.input-xs {
-  @apply h-8 text-xs;
-}
-
-.select-xs {
-  @apply h-8 text-xs;
-}
-
-/* Label text sizing */
-.label-text {
-  @apply text-sm;
-}
-
-.label-text-alt {
-  @apply text-xs;
+/* Drop zone active indicator */
+.drop-active {
+  box-shadow: inset 0 0 0 2px oklch(var(--p));
+  background-color: oklch(var(--p) / 0.1);
 }

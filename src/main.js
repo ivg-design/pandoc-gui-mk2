@@ -4,39 +4,48 @@
 let inputFilePath = null;
 let inputFileName = null;
 let inputFileContent = null;
+let outputDirPath = null;
+let isTauri = false;
 
-// Common fonts that are typically available on most systems
+// Detect Tauri environment
+async function detectTauri() {
+  try {
+    // In Tauri v2, we check if the core module is available
+    const { invoke } = await import('@tauri-apps/api/core');
+    isTauri = true;
+    console.log('Running in Tauri mode');
+    return true;
+  } catch (e) {
+    isTauri = false;
+    console.log('Running in web mode');
+    return false;
+  }
+}
+
+// Common fonts
 const commonFonts = [
-  'Arial', 'Arial Black', 'Book Antiqua', 'Bookman Old Style', 'Century Gothic',
-  'Comic Sans MS', 'Courier New', 'Garamond', 'Georgia', 'Helvetica', 'Impact',
-  'Lucida Console', 'Lucida Sans Unicode', 'Microsoft Sans Serif', 'Palatino Linotype',
-  'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
-  // macOS
-  'American Typewriter', 'Avenir', 'Baskerville', 'Big Caslon', 'Bodoni 72',
-  'Chalkboard', 'Charter', 'Cochin', 'Copperplate', 'Didot', 'Futura',
-  'Geneva', 'Gill Sans', 'Helvetica Neue', 'Hoefler Text', 'Lucida Grande',
-  'Marker Felt', 'Menlo', 'Monaco', 'Optima', 'Papyrus', 'Phosphate',
-  'Rockwell', 'San Francisco', 'Skia', 'Snell Roundhand', 'STIXGeneral',
-  'Superclarendon', 'Times', 'Zapfino',
-  // Linux
-  'DejaVu Sans', 'DejaVu Serif', 'Liberation Sans', 'Liberation Serif',
-  'Noto Sans', 'Noto Serif', 'Ubuntu', 'Cantarell', 'Droid Sans', 'Droid Serif'
+  'Arial', 'Arial Black', 'Book Antiqua', 'Century Gothic', 'Comic Sans MS',
+  'Courier New', 'Garamond', 'Georgia', 'Helvetica', 'Impact', 'Lucida Console',
+  'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
+  'American Typewriter', 'Avenir', 'Baskerville', 'Bodoni 72', 'Charter',
+  'Cochin', 'Didot', 'Futura', 'Geneva', 'Gill Sans', 'Helvetica Neue',
+  'Hoefler Text', 'Lucida Grande', 'Menlo', 'Monaco', 'Optima', 'Rockwell',
+  'San Francisco', 'Times', 'DejaVu Sans', 'DejaVu Serif', 'Liberation Sans',
+  'Liberation Serif', 'Noto Sans', 'Noto Serif', 'Ubuntu', 'Cantarell'
 ];
 
 const monoFonts = [
   'Courier New', 'Menlo', 'Monaco', 'Consolas', 'SF Mono', 'Fira Code',
   'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Inconsolata',
-  'Roboto Mono', 'Ubuntu Mono', 'Hack', 'Anonymous Pro', 'Cascadia Code',
-  'DejaVu Sans Mono', 'Liberation Mono', 'Droid Sans Mono', 'PT Mono',
-  'Noto Sans Mono', 'Input Mono', 'Iosevka', 'Victor Mono'
+  'Roboto Mono', 'Ubuntu Mono', 'Hack', 'Cascadia Code', 'DejaVu Sans Mono',
+  'Liberation Mono', 'PT Mono', 'Noto Sans Mono', 'Iosevka'
 ];
 
-// Code theme colors for preview (kw=keyword, fn=function, st=string, cm=comment)
+// Code theme colors
 const themeColors = {
   'pygments': { bg: '#f8f8f8', kw: '#008000', fn: '#0000ff', st: '#ba2121', cm: '#408080' },
   'kate': { bg: '#ffffff', kw: '#1f1c1b', fn: '#644a9b', st: '#bf0303', cm: '#898887' },
   'tango': { bg: '#f8f8f8', kw: '#204a87', fn: '#000000', st: '#4e9a06', cm: '#8f5902' },
-  'espresso': { bg: '#2a211c', kw: '#43a8ed', fn: '#ff9d00', st: '#049b0a', cm: '#7c7c7c' },
   'breezedark': { bg: '#232629', kw: '#cfcfc2', fn: '#8e44ad', st: '#f44f4f', cm: '#7a7c7d' },
   'zenburn': { bg: '#3f3f3f', kw: '#f0dfaf', fn: '#efef8f', st: '#cc9393', cm: '#7f9f7f' },
   'nord': { bg: '#2e3440', kw: '#81a1c1', fn: '#88c0d0', st: '#a3be8c', cm: '#616e88' },
@@ -44,98 +53,36 @@ const themeColors = {
   'monokai': { bg: '#272822', kw: '#f92672', fn: '#a6e22e', st: '#e6db74', cm: '#75715e' },
   'gruvbox-dark': { bg: '#282828', kw: '#fb4934', fn: '#b8bb26', st: '#fabd2f', cm: '#928374' },
   'solarized-dark': { bg: '#002b36', kw: '#859900', fn: '#268bd2', st: '#2aa198', cm: '#586e75' },
-  'vim': { bg: '#1e1e1e', kw: '#569cd6', fn: '#dcdcdc', st: '#ce9178', cm: '#6a9955' },
-  'one-dark': { bg: '#282c34', kw: '#61afef', fn: '#e06c75', st: '#98c379', cm: '#7f848e' },
-  'github-dark': { bg: '#0d1117', kw: '#79c0ff', fn: '#d1a97f', st: '#a371f7', cm: '#8b949e' },
-  'atom-one-light': { bg: '#fafafa', kw: '#0184bc', fn: '#4078f2', st: '#50a14f', cm: '#a0a1a7' },
 };
 
-// DOM Elements
+// DOM helper
 const $ = id => document.getElementById(id);
 
 // Theme Management
 function initTheme() {
   const savedTheme = localStorage.getItem('appTheme') || 'dim';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  setupThemeDropdown();
-}
 
-function setupThemeDropdown() {
-  const themeButtons = document.querySelectorAll('[data-theme]');
-  themeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const theme = btn.getAttribute('data-theme');
-      setTheme(theme);
+  // Theme menu click handlers
+  document.querySelectorAll('[data-set-theme]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const theme = btn.getAttribute('data-set-theme');
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('appTheme', theme);
+      // Close dropdown by removing focus
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
     });
   });
 }
 
-function setTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('appTheme', theme);
-  updateCodePreview();
-  updateCommandPreview();
-}
-
-function toggleTheme() {
-  const currentTheme = document.documentElement.getAttribute('data-theme');
-  const newTheme = currentTheme === 'light' ? 'dim' : 'light';
-  setTheme(newTheme);
-  $('themeToggle').checked = newTheme === 'light';
-}
-
-// Dependency Checker
-async function checkDependencies() {
-  const missing = [];
-
-  // Check for pandoc
-  if (window.__TAURI__) {
-    const { invoke } = window.__TAURI__;
-    try {
-      await invoke('check_command', { cmd: 'pandoc' });
-    } catch (e) {
-      missing.push({
-        name: 'pandoc',
-        install: 'brew install pandoc (macOS) or apt install pandoc (Linux)',
-        url: 'https://pandoc.org/installing.html'
-      });
-    }
-
-    // Check for tectonic (PDF engine)
-    try {
-      await invoke('check_command', { cmd: 'tectonic' });
-    } catch (e) {
-      missing.push({
-        name: 'tectonic',
-        install: 'brew install tectonic (macOS) or cargo install tectonic (Linux)',
-        url: 'https://tectonic-typesetting.github.io/en-US/'
-      });
-    }
-  } else {
-    // In web mode, show info message about dependencies
-    console.info('Dependencies must be installed on the system before using conversion:');
-    console.info('- pandoc: https://pandoc.org/installing.html');
-    console.info('- tectonic (for PDF): https://tectonic-typesetting.github.io/');
-  }
-
-  if (missing.length > 0 && window.__TAURI__) {
-    const msg = missing.map(dep =>
-      `${dep.name}: ${dep.install}`
-    ).join('\n\n');
-
-    showToast(
-      `Missing dependencies:\n\n${msg}\n\nVisit the links in console for installation instructions.`,
-      'warning'
-    );
-  }
-}
-
-// System Fonts - populate all common fonts (pandoc/LaTeX will use what's available)
+// System Fonts
 function loadSystemFonts() {
   const mainFontSelect = $('mainFont');
   const monoFontSelect = $('monoFont');
 
-  // Just add all fonts - pandoc will use what's installed on the system
   commonFonts.sort().forEach(font => {
     const opt = document.createElement('option');
     opt.value = font;
@@ -152,39 +99,138 @@ function loadSystemFonts() {
 }
 
 // File Handling
-function setupFileHandling() {
-  $('browseInput').addEventListener('click', () => $('inputFile').click());
+async function setupFileHandling() {
+  const browseInputBtn = $('browseInput');
+  const inputFileEl = $('inputFile');
+  const browseOutputBtn = $('browseOutput');
 
-  $('inputFile').addEventListener('change', async (e) => {
+  browseInputBtn.addEventListener('click', async () => {
+    if (isTauri) {
+      // Use Tauri dialog for file selection
+      try {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({
+          multiple: false,
+          filters: [{
+            name: 'Documents',
+            extensions: ['md', 'markdown', 'rst', 'tex', 'latex', 'docx', 'doc', 'html', 'htm', 'org', 'txt', 'adoc', 'asciidoc', 'epub', 'odt', 'rtf', 'json', 'yaml', 'yml']
+          }]
+        });
+        if (selected) {
+          await handleTauriFileSelect(selected);
+        }
+      } catch (err) {
+        console.error('Dialog error:', err);
+        showToast('Failed to open file dialog: ' + err, 'error');
+      }
+    } else {
+      inputFileEl.click();
+    }
+  });
+
+  inputFileEl.addEventListener('change', async (e) => {
     if (e.target.files.length > 0) {
       await handleFileSelect(e.target.files[0]);
     }
   });
 
-  $('browseOutput').addEventListener('click', () => {
-    // In Tauri, this would open a save dialog
-    if (window.__TAURI__) {
-      // Tauri save dialog
+  browseOutputBtn.addEventListener('click', async () => {
+    if (isTauri) {
+      // Use Tauri dialog for folder selection
+      try {
+        const { open } = await import('@tauri-apps/plugin-dialog');
+        const selected = await open({
+          directory: true,
+          multiple: false
+        });
+        if (selected) {
+          outputDirPath = selected.endsWith('/') ? selected : selected + '/';
+          updateOutputDisplay();
+          updateCommandPreview();
+        }
+      } catch (err) {
+        console.error('Dialog error:', err);
+        showToast('Failed to open folder dialog: ' + err, 'error');
+      }
+    } else {
+      showToast('Output directory can only be changed in desktop app', 'info');
     }
   });
 
-  $('outputPath').addEventListener('input', updateCommandPreview);
+  $('outputName').addEventListener('input', () => {
+    updateOutputDisplay();
+    updateCommandPreview();
+  });
+  $('outputFormat').addEventListener('change', () => {
+    handleFormatChange();
+    updateOutputDisplay();
+    updateCommandPreview();
+  });
+}
+
+// Handle file selection in Tauri
+async function handleTauriFileSelect(filePath) {
+  inputFilePath = filePath;
+  inputFileName = filePath.split('/').pop();
+
+  // Update input path display
+  $('inputPath').textContent = filePath;
+
+  // Set output directory from input file path
+  const lastSlash = filePath.lastIndexOf('/');
+  if (lastSlash > 0) {
+    outputDirPath = filePath.substring(0, lastSlash + 1);
+  } else {
+    outputDirPath = './';
+  }
+
+  // Set output filename (without extension)
+  const baseName = inputFileName.replace(/\.[^/.]+$/, '');
+  $('outputName').value = baseName;
+
+  // Read file content for mermaid detection using Tauri fs
+  try {
+    const { readTextFile } = await import('@tauri-apps/plugin-fs');
+    inputFileContent = await readTextFile(filePath);
+    detectMermaid(inputFileContent);
+  } catch (e) {
+    console.error('Failed to read file:', e);
+    inputFileContent = null;
+  }
+
+  // Enable convert button
+  $('convertBtn').disabled = false;
+  updateOutputDisplay();
+  updateCommandPreview();
+}
+
+// Update output display with actual path
+function updateOutputDisplay() {
+  const outName = $('outputName').value || 'output';
+  const ext = getExtensionForFormat($('outputFormat').value);
+  const dir = outputDirPath || '';
+
+  if (dir) {
+    $('outputDir').textContent = dir + outName + '.' + ext;
+  } else {
+    $('outputDir').textContent = 'Output: Select input file first';
+  }
 }
 
 async function handleFileSelect(file) {
   inputFileName = file.name;
-  // Get absolute path: use file.path if available (Tauri), otherwise construct from file
-  inputFilePath = file.path || file.webkitRelativePath || file.name;
+  // In web mode we only get the filename
+  inputFilePath = file.name;
 
-  // In web mode, if we only have filename, try to use it as-is
-  // In Tauri mode, we'll get a full path from file.path
-  $('inputPath').value = inputFilePath;
+  // Update input path display (in web mode just show filename)
+  $('inputPath').textContent = file.name;
 
-  // Auto-set output path (same location, same name)
+  // In web mode, output dir is same folder (relative)
+  outputDirPath = '';
+
+  // Set output filename (without extension)
   const baseName = file.name.replace(/\.[^/.]+$/, '');
-  const dir = inputFilePath.substring(0, inputFilePath.lastIndexOf('/') + 1);
-  const absoluteOutputPath = dir + baseName;
-  $('outputPath').value = absoluteOutputPath;
+  $('outputName').value = baseName;
 
   // Read file content for mermaid detection
   try {
@@ -194,7 +240,9 @@ async function handleFileSelect(file) {
     inputFileContent = null;
   }
 
+  // Enable convert button
   $('convertBtn').disabled = false;
+  updateOutputDisplay();
   updateCommandPreview();
 }
 
@@ -203,10 +251,25 @@ function detectMermaid(content) {
   $('mermaidDetected').classList.toggle('hidden', !hasMermaid);
 }
 
+// Format change handling
+function handleFormatChange() {
+  const format = $('outputFormat').value;
+  const isPdf = format === 'pdf';
+  const needsStandalone = ['html', 'latex'].includes(format);
+
+  // Show/hide PDF engine section
+  $('pdfEngineSection').classList.toggle('hidden', !isPdf);
+
+  // Show/hide standalone option
+  $('standaloneLabel').classList.toggle('hidden', !needsStandalone);
+}
+
 // Margin handling
 function setupMargins() {
-  $('uniformMargins').addEventListener('change', () => {
-    const uniform = $('uniformMargins').checked;
+  const uniformCheckbox = $('uniformMargins');
+
+  uniformCheckbox.addEventListener('change', () => {
+    const uniform = uniformCheckbox.checked;
     $('uniformMarginInput').classList.toggle('hidden', !uniform);
     $('individualMargins').classList.toggle('hidden', uniform);
     updateCommandPreview();
@@ -220,6 +283,11 @@ function setupMargins() {
     $('marginRight').value = val;
     updateCommandPreview();
   });
+
+  // Individual margin inputs
+  ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'].forEach(id => {
+    $(id).addEventListener('input', updateCommandPreview);
+  });
 }
 
 // Code Preview
@@ -227,20 +295,20 @@ function updateCodePreview() {
   const theme = $('highlightTheme').value;
   const colors = themeColors[theme] || themeColors['breezedark'];
   const preview = $('codePreview');
-  const bgColor = $('codeBlockBg').checked ? ($('codeBlockBgColor').value || colors.bg) : 'transparent';
+  const useBg = $('codeBlockBg').checked;
+  const bgColor = useBg ? ($('codeBlockBgColor').value || colors.bg) : 'transparent';
 
   preview.style.backgroundColor = bgColor;
   preview.querySelectorAll('.kw').forEach(el => el.style.color = colors.kw);
   preview.querySelectorAll('.fn').forEach(el => el.style.color = colors.fn);
   preview.querySelectorAll('.st').forEach(el => el.style.color = colors.st);
-  preview.querySelectorAll('.cm').forEach(el => {
-    el.style.color = colors.cm;
-    el.style.fontStyle = 'italic';
-  });
+  preview.querySelectorAll('.cm').forEach(el => el.style.color = colors.cm);
 
+  // Set text color based on theme brightness
   const isLightTheme = ['pygments', 'kate', 'tango'].includes(theme);
   preview.style.color = isLightTheme ? '#333' : '#ddd';
 
+  // Update color picker if user hasn't customized it
   if (!$('codeBlockBgColor').dataset.userSet) {
     $('codeBlockBgColor').value = colors.bg;
   }
@@ -248,15 +316,13 @@ function updateCodePreview() {
 
 function setupCodePreview() {
   $('highlightTheme').addEventListener('change', () => {
+    // Reset user customization flag when theme changes
     $('codeBlockBgColor').dataset.userSet = '';
     updateCodePreview();
     updateCommandPreview();
   });
 
-  $('codeBlockBg').addEventListener('change', () => {
-    $('bgColorPicker').classList.toggle('hidden', !$('codeBlockBg').checked);
-    updateCodePreview();
-  });
+  $('codeBlockBg').addEventListener('change', updateCodePreview);
 
   $('codeBlockBgColor').addEventListener('input', () => {
     $('codeBlockBgColor').dataset.userSet = 'true';
@@ -264,28 +330,6 @@ function setupCodePreview() {
   });
 
   updateCodePreview();
-}
-
-// Output Format Handling
-function setupFormatHandling() {
-  $('outputFormat').addEventListener('change', () => {
-    const format = $('outputFormat').value;
-    const isPdf = format === 'pdf';
-    const needsStandalone = ['html', 'latex'].includes(format);
-
-    $('pdfEngineSection').classList.toggle('hidden', !isPdf);
-    $('docClassSection').classList.toggle('hidden', !isPdf);
-    $('standaloneLabel').classList.toggle('hidden', !needsStandalone);
-
-    // Update output path extension
-    const outputPath = $('outputPath').value;
-    if (outputPath) {
-      const basePath = outputPath.replace(/\.[^/.]+$/, '');
-      $('outputPath').value = basePath + '.' + getExtensionForFormat(format);
-    }
-
-    updateCommandPreview();
-  });
 }
 
 // TOC Toggle
@@ -301,7 +345,141 @@ function setupTocHandling() {
   });
 }
 
-// Replace metadata tokens
+// Token drag and drop
+function setupTokenDrag() {
+  const tokenList = $('tokenList');
+  if (!tokenList) return;
+
+  // Get all text inputs that can accept tokens
+  const dropTargetIds = [
+    'docTitle', 'docAuthor', 'docDate',
+    'headerLeft', 'headerCenter', 'headerRight',
+    'footerLeft', 'footerCenter', 'footerRight',
+    'outputName', 'extraArgs'
+  ];
+
+  let draggedToken = null;
+
+  // Setup drag on tokens
+  tokenList.querySelectorAll('[data-token]').forEach(token => {
+    token.setAttribute('draggable', 'true');
+
+    token.addEventListener('dragstart', (e) => {
+      draggedToken = token.dataset.token;
+      e.dataTransfer.setData('text/plain', token.dataset.token);
+      e.dataTransfer.setData('application/x-token', token.dataset.token);
+      e.dataTransfer.effectAllowed = 'copy';
+      token.classList.add('dragging-token');
+
+      // Create a styled drag image
+      const dragImage = token.cloneNode(true);
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-1000px';
+      document.body.appendChild(dragImage);
+      e.dataTransfer.setDragImage(dragImage, 20, 10);
+      setTimeout(() => dragImage.remove(), 0);
+    });
+
+    token.addEventListener('dragend', () => {
+      token.classList.remove('dragging-token');
+      draggedToken = null;
+      // Remove drop-active from all targets
+      dropTargetIds.forEach(id => {
+        const el = $(id);
+        if (el) el.classList.remove('drop-active', 'drag-over');
+      });
+    });
+  });
+
+  // Setup drop targets
+  dropTargetIds.forEach(id => {
+    const input = $(id);
+    if (!input) return;
+
+    input.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      input.classList.add('drop-active');
+    });
+
+    input.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      input.classList.add('drop-active');
+    });
+
+    input.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only remove if we're actually leaving the element
+      const rect = input.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX >= rect.right ||
+          e.clientY < rect.top || e.clientY >= rect.bottom) {
+        input.classList.remove('drop-active');
+      }
+    });
+
+    input.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      input.classList.remove('drop-active', 'drag-over');
+
+      // Try to get token from various sources
+      let token = e.dataTransfer.getData('application/x-token') ||
+                  e.dataTransfer.getData('text/plain') ||
+                  draggedToken;
+
+      if (token && token.startsWith('{') && token.endsWith('}')) {
+        const pos = input.selectionStart ?? input.value.length;
+        input.value = input.value.slice(0, pos) + token + input.value.slice(pos);
+        input.focus();
+        // Set cursor after inserted token
+        const newPos = pos + token.length;
+        input.setSelectionRange(newPos, newPos);
+        // Highlight the input to show token was added
+        highlightTokensInInput(input);
+        updateCommandPreview();
+        showToast(`Token ${token} added`, 'success');
+      }
+    });
+
+    // Also allow clicking on tokens to add them (as fallback)
+    input.addEventListener('focus', () => {
+      highlightTokensInInput(input);
+    });
+
+    input.addEventListener('input', () => {
+      highlightTokensInInput(input);
+    });
+  });
+
+  // Make tokens clickable to add to focused input
+  tokenList.querySelectorAll('[data-token]').forEach(token => {
+    token.addEventListener('click', () => {
+      // Find the currently focused input or use a default
+      const activeEl = document.activeElement;
+      if (activeEl && dropTargetIds.includes(activeEl.id)) {
+        const input = activeEl;
+        const tokenValue = token.dataset.token;
+        const pos = input.selectionStart ?? input.value.length;
+        input.value = input.value.slice(0, pos) + tokenValue + input.value.slice(pos);
+        const newPos = pos + tokenValue.length;
+        input.setSelectionRange(newPos, newPos);
+        highlightTokensInInput(input);
+        updateCommandPreview();
+      }
+    });
+  });
+}
+
+// Highlight tokens in input with visual indicator
+function highlightTokensInInput(input) {
+  const hasTokens = /\{[^}]+\}/.test(input.value);
+  input.classList.toggle('has-tokens', hasTokens);
+}
+
+// Replace metadata tokens with actual values
 function replaceMetadataTokens(str) {
   if (!str) return str;
   const now = new Date();
@@ -313,7 +491,7 @@ function replaceMetadataTokens(str) {
     .replace(/\{today\}/g, today)
     .replace(/\{year\}/g, year)
     .replace(/\{file\}/g, baseName)
-    .replace(/\{user\}/g, 'User'); // In Tauri, we'd get the actual username
+    .replace(/\{user\}/g, 'User');
 }
 
 // Build Pandoc Command
@@ -328,19 +506,16 @@ function buildPandocCommand() {
   const format = $('outputFormat').value;
   args.push(`-t ${format}`);
 
-  // Output file (use absolute path if available)
-  let outputPath = $('outputPath').value || 'output';
-  // Expand ~ to home directory for absolute paths
-  if (outputPath.startsWith('~')) {
-    outputPath = outputPath.replace('~', (process.env.HOME || '/Users/ivg'));
-  }
+  // Output file
+  const outName = $('outputName').value || 'output';
   const ext = getExtensionForFormat(format);
-  const finalOutput = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
+  const dir = outputDirPath || './';
+  const finalOutput = dir + outName + '.' + ext;
   args.push(`-o "${finalOutput}"`);
 
-  // Standalone (only for HTML/LaTeX, always true for PDF)
+  // Standalone flag
   const isPdf = format === 'pdf';
-  if (isPdf || $('standalone').checked) {
+  if (isPdf || ($('standalone') && $('standalone').checked)) {
     args.push('-s');
   }
 
@@ -370,88 +545,85 @@ function buildPandocCommand() {
       args.push(`-V geometry:${margins.join(',')}`);
     }
 
-    // Title page
+    // Title page (KOMA-Script or custom)
     if ($('titlePage').checked) {
+      // Use titlepages package for article class or titlepage for others
       args.push('-V titlepage=true');
-    }
-
-    // Header/Footer tokens
-    const replaceHeaderTokens = (str) => {
-      if (!str) return str;
-      return str
-        .replace(/\{title\}/g, '\\\\@title')
-        .replace(/\{author\}/g, '\\\\@author')
-        .replace(/\{date\}/g, '\\\\@date')
-        .replace(/\{page\}/g, '\\\\thepage')
-        .replace(/\{pages\}/g, '\\\\pageref{LastPage}')
-        .replace(/\{chapter\}/g, '\\\\leftmark')
-        .replace(/\{section\}/g, '\\\\rightmark')
-        .replace(/\{file\}/g, inputFileName || 'document');
-    };
-
-    const headerL = replaceHeaderTokens($('headerLeft').value);
-    const headerC = replaceHeaderTokens($('headerCenter').value);
-    const headerR = replaceHeaderTokens($('headerRight').value);
-    const footerL = replaceHeaderTokens($('footerLeft').value);
-    const footerC = replaceHeaderTokens($('footerCenter').value);
-    const footerR = replaceHeaderTokens($('footerRight').value);
-
-    const hasHeader = headerL || headerC || headerR;
-    const hasFooter = footerL || footerC || footerR;
-    const needsLastPage = [headerL, headerC, headerR, footerL, footerC, footerR].some(s => s && s.includes('LastPage'));
-
-    if (hasHeader || hasFooter) {
-      let includes = '\\\\usepackage{microtype}\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}';
-      if (needsLastPage) includes += '\\\\usepackage{lastpage}';
-      args.push(`-V header-includes="${includes}"`);
-      if (headerL) args.push(`-V header-includes="\\\\lhead{${headerL}}"`);
-      if (headerC) args.push(`-V header-includes="\\\\chead{${headerC}}"`);
-      if (headerR) args.push(`-V header-includes="\\\\rhead{${headerR}}"`);
-      if (footerL) args.push(`-V header-includes="\\\\lfoot{${footerL}}"`);
-      if (footerC) args.push(`-V header-includes="\\\\cfoot{${footerC}}"`);
-      if (footerR) args.push(`-V header-includes="\\\\rfoot{${footerR}}"`);
-    }
-
-    // Page numbering
-    const pagePos = $('pageNumberPosition').value;
-    const pageFormat = $('pageNumberFormat').value;
-    if (pagePos === 'none') {
-      args.push('-V pagestyle=empty');
-    } else if (!hasHeader && !hasFooter) {
-      let pageNum;
-      switch (pageFormat) {
-        case 'page-of':
-          pageNum = 'Page \\\\thepage\\\\ of \\\\pageref{LastPage}';
-          args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{lastpage}"');
-          break;
-        case 'number-of':
-          pageNum = '\\\\thepage\\\\ / \\\\pageref{LastPage}';
-          args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{lastpage}"');
-          break;
-        case 'number':
-          pageNum = '\\\\thepage';
-          break;
-        default:
-          pageNum = 'Page \\\\thepage';
-      }
-
-      if (pagePos !== 'bottom-center') {
-        args.push('-V header-includes="\\\\usepackage{microtype}\\\\usepackage{fancyhdr}\\\\pagestyle{fancy}\\\\fancyhf{}"');
-        if (pagePos === 'bottom-right') {
-          args.push(`-V header-includes="\\\\rfoot{${pageNum}}"`);
-        } else if (pagePos === 'top-right') {
-          args.push(`-V header-includes="\\\\rhead{${pageNum}}"`);
-        }
-      }
+      args.push('-V titlepage-rule-height=0');
     }
 
     // Link colors
     if ($('colorLinks').checked) {
       args.push('-V colorlinks=true');
       const color = $('linkColor').value.replace('#', '');
-      // Quote the [HTML] to prevent zsh glob interpretation
       args.push(`-V 'linkcolor=[HTML]{${color}}'`);
       args.push(`-V 'urlcolor=[HTML]{${color}}'`);
+    }
+
+    // Headers and Footers using fancyhdr
+    const headerLeft = replaceHeaderFooterTokens($('headerLeft').value);
+    const headerCenter = replaceHeaderFooterTokens($('headerCenter').value);
+    const headerRight = replaceHeaderFooterTokens($('headerRight').value);
+    const footerLeft = replaceHeaderFooterTokens($('footerLeft').value);
+    const footerCenter = replaceHeaderFooterTokens($('footerCenter').value);
+    const footerRight = replaceHeaderFooterTokens($('footerRight').value);
+
+    const hasHeaders = headerLeft || headerCenter || headerRight;
+    const hasFooters = footerLeft || footerCenter || footerRight;
+
+    if (hasHeaders || hasFooters) {
+      // Enable fancyhdr
+      args.push('-V pagestyle=fancy');
+
+      // Build header-includes for fancyhdr
+      let headerIncludes = '\\usepackage{fancyhdr}\\pagestyle{fancy}';
+      headerIncludes += '\\fancyhf{}'; // Clear defaults
+
+      if (headerLeft) headerIncludes += `\\fancyhead[L]{${headerLeft}}`;
+      if (headerCenter) headerIncludes += `\\fancyhead[C]{${headerCenter}}`;
+      if (headerRight) headerIncludes += `\\fancyhead[R]{${headerRight}}`;
+      if (footerLeft) headerIncludes += `\\fancyfoot[L]{${footerLeft}}`;
+      if (footerCenter) headerIncludes += `\\fancyfoot[C]{${footerCenter}}`;
+      if (footerRight) headerIncludes += `\\fancyfoot[R]{${footerRight}}`;
+
+      args.push(`-V header-includes="${headerIncludes}"`);
+    } else {
+      // Default page numbering based on settings
+      const pageFormat = $('pageNumberFormat').value;
+      const pagePosition = $('pageNumberPosition').value;
+      const pageStyle = $('pageNumberStyle').value;
+
+      let pageCmd = '';
+      if (pageStyle === 'roman') {
+        pageCmd += '\\pagenumbering{roman}';
+      } else if (pageStyle === 'Roman') {
+        pageCmd += '\\pagenumbering{Roman}';
+      }
+
+      if (pageFormat === 'page-of') {
+        // Use lastpage package for "N of X" format
+        pageCmd += '\\usepackage{lastpage}\\usepackage{fancyhdr}\\pagestyle{fancy}\\fancyhf{}';
+        if (pagePosition === 'bottom-center') {
+          pageCmd += '\\fancyfoot[C]{\\thepage\\ of \\pageref{LastPage}}';
+        } else if (pagePosition === 'bottom-right') {
+          pageCmd += '\\fancyfoot[R]{\\thepage\\ of \\pageref{LastPage}}';
+        } else {
+          pageCmd += '\\fancyhead[R]{\\thepage\\ of \\pageref{LastPage}}';
+        }
+      } else if (pageFormat === 'page') {
+        pageCmd += '\\usepackage{fancyhdr}\\pagestyle{fancy}\\fancyhf{}';
+        if (pagePosition === 'bottom-center') {
+          pageCmd += '\\fancyfoot[C]{Page \\thepage}';
+        } else if (pagePosition === 'bottom-right') {
+          pageCmd += '\\fancyfoot[R]{Page \\thepage}';
+        } else {
+          pageCmd += '\\fancyhead[R]{Page \\thepage}';
+        }
+      }
+
+      if (pageCmd) {
+        args.push(`-V header-includes="${pageCmd}"`);
+      }
     }
   }
 
@@ -471,30 +643,21 @@ function buildPandocCommand() {
   }
 
   // Code highlighting
-  args.push(`--syntax-highlighting=${$('highlightTheme').value}`);
+  args.push(`--highlight-style=${$('highlightTheme').value}`);
 
   // TOC
   if ($('toc').checked) {
     args.push('--toc');
     args.push(`--toc-depth=${$('tocDepth').value}`);
-
-    // New page after TOC - use LaTeX clearpage to start content on new page
-    // Note: Don't use -V toc-own-page=true as it forces ALL sections to start on new pages
-    if ($('tocNewPage') && $('tocNewPage').checked && isPdf) {
-      args.push('-V toc-title="Contents"');  // Ensure TOC has a title
-      // Add clearpage after TOC via header-includes
-      // This inserts a page break immediately after the TOC
-      args.push('-V header-includes="\\\\let\\\\oldtableofcontents\\\\tableofcontents\\\\renewcommand{\\\\tableofcontents}{\\\\oldtableofcontents\\\\clearpage}"');
+    // Page break after TOC
+    if ($('tocNewPage').checked) {
+      args.push('-V toc-own-page=true');
     }
   }
 
   // List of Figures / Tables
-  if ($('lof') && $('lof').checked) {
-    args.push('-V lof=true');
-  }
-  if ($('lot') && $('lot').checked) {
-    args.push('-V lot=true');
-  }
+  if ($('lof') && $('lof').checked) args.push('-V lof=true');
+  if ($('lot') && $('lot').checked) args.push('-V lot=true');
 
   // Top-level division
   const topLevelDiv = $('topLevelDiv');
@@ -516,7 +679,7 @@ function buildPandocCommand() {
   if (author) args.push(`-M author="${author}"`);
   if (date) args.push(`-M date="${date}"`);
 
-  // Mermaid filter (auto-enabled if detected)
+  // Mermaid filter
   const hasMermaid = !$('mermaidDetected').classList.contains('hidden');
   if (hasMermaid) {
     const mermaidFormat = document.querySelector('input[name="mermaidFormat"]:checked').value;
@@ -527,19 +690,33 @@ function buildPandocCommand() {
   }
 
   // Other filters
-  if ($('filterCrossref').checked) {
-    args.push('-F pandoc-crossref');
-  }
-  if ($('filterCiteproc').checked) {
-    args.push('--citeproc');
-  }
+  if ($('filterCrossref').checked) args.push('-F pandoc-crossref');
+  if ($('filterCiteproc').checked) args.push('--citeproc');
 
   // Extra arguments
-  if ($('extraArgs').value.trim()) {
-    args.push($('extraArgs').value.trim());
+  const extraArgs = $('extraArgs').value.trim();
+  if (extraArgs) {
+    args.push(extraArgs);
   }
 
   return args.join(' \\\n  ');
+}
+
+// Replace header/footer tokens with LaTeX commands
+function replaceHeaderFooterTokens(str) {
+  if (!str) return '';
+  return str
+    .replace(/\{page\}/g, '\\thepage')
+    .replace(/\{pages\}/g, '\\pageref{LastPage}')
+    .replace(/\{section\}/g, '\\leftmark')
+    .replace(/\{chapter\}/g, '\\rightmark')
+    .replace(/\{title\}/g, replaceMetadataTokens('{title}'))
+    .replace(/\{author\}/g, replaceMetadataTokens('{author}'))
+    .replace(/\{date\}/g, replaceMetadataTokens('{date}'))
+    .replace(/\{today\}/g, replaceMetadataTokens('{today}'))
+    .replace(/\{year\}/g, replaceMetadataTokens('{year}'))
+    .replace(/\{file\}/g, replaceMetadataTokens('{file}'))
+    .replace(/\{user\}/g, replaceMetadataTokens('{user}'));
 }
 
 function getExtensionForFormat(format) {
@@ -559,11 +736,13 @@ function updateCommandPreview() {
 function setupCopyCommand() {
   $('copyCmd').addEventListener('click', async () => {
     const cmd = $('commandPreview').textContent;
+    // Convert multi-line command to single line
+    const singleLineCmd = cmd.replace(/\\\n\s+/g, ' ');
     try {
-      await navigator.clipboard.writeText(cmd.replace(/\\\n\s+/g, ' '));
-      showToast('Copied!', 'success');
+      await navigator.clipboard.writeText(singleLineCmd);
+      showToast('Command copied to clipboard!', 'success');
     } catch (err) {
-      showToast('Failed to copy', 'error');
+      showToast('Failed to copy command', 'error');
     }
   });
 }
@@ -571,60 +750,73 @@ function setupCopyCommand() {
 // Toast Notifications
 function showToast(message, type = 'info') {
   const toast = document.createElement('div');
-  toast.className = `alert alert-${type} py-2 px-3 text-sm`;
+  toast.className = `alert alert-${type} shadow-lg`;
   toast.innerHTML = `<span>${message}</span>`;
   $('toastContainer').appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
 }
 
 // Conversion
 function setupConversion() {
   $('convertBtn').addEventListener('click', async () => {
     if (!inputFilePath) {
-      showToast('Select an input file', 'warning');
+      showToast('Please select an input file first', 'warning');
       return;
     }
 
     $('statusArea').classList.remove('hidden');
     $('statusText').textContent = 'Converting...';
+    $('progressBar').removeAttribute('value'); // Indeterminate
     $('convertBtn').disabled = true;
 
     try {
-      if (window.__TAURI__) {
-        const { invoke } = window.__TAURI__.core;
+      if (isTauri) {
+        const { invoke } = await import('@tauri-apps/api/core');
         const command = buildPandocCommand().replace(/\\\n\s+/g, ' ');
         await invoke('run_pandoc', { command });
-        $('statusText').textContent = 'Done!';
-        showToast('Converted successfully!', 'success');
 
-        // Open on complete
+        $('statusText').textContent = 'Conversion complete!';
+        $('progressBar').value = 100;
+        showToast('Document converted successfully!', 'success');
+
+        // Open file if checkbox is checked
         if ($('openOnComplete').checked) {
-          const outputPath = $('outputPath').value;
+          const outName = $('outputName').value || 'output';
           const ext = getExtensionForFormat($('outputFormat').value);
-          const finalPath = outputPath.endsWith('.' + ext) ? outputPath : outputPath + '.' + ext;
+          const finalPath = (outputDirPath || './') + outName + '.' + ext;
           await invoke('open_file', { path: finalPath });
         }
       } else {
+        // Web mode - can't actually run pandoc
         setTimeout(() => {
-          $('statusText').textContent = 'Web mode: copy command to run';
-          showToast('Copy command to run in terminal', 'info');
+          $('statusText').textContent = 'Copy the command to run in your terminal';
+          $('progressBar').value = 100;
+          showToast('In web mode, copy the command and run it in your terminal', 'info');
         }, 500);
       }
     } catch (err) {
       $('statusText').textContent = `Error: ${err}`;
-      showToast('Conversion failed', 'error');
+      showToast('Conversion failed: ' + err, 'error');
     } finally {
       $('convertBtn').disabled = !inputFilePath;
     }
   });
 }
 
-// Event listeners for all inputs
+// Setup all input listeners for command preview updates
 function setupInputListeners() {
+  const excludeIds = ['inputFile', 'presetSelect', 'tokensCollapse', 'inputPath', 'outputDir'];
+
   document.querySelectorAll('input, select').forEach(input => {
-    if (!['inputFile', 'themeToggle', 'presetSelect'].includes(input.id)) {
+    if (!excludeIds.includes(input.id) && input.type !== 'file') {
       input.addEventListener('change', updateCommandPreview);
-      input.addEventListener('input', updateCommandPreview);
+      if (input.type !== 'checkbox' && input.type !== 'radio') {
+        input.addEventListener('input', updateCommandPreview);
+      }
     }
   });
 }
@@ -640,14 +832,13 @@ function getPresets() {
   }
 }
 
-function savePresets(presets) {
+function savePresetsToStorage(presets) {
   localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
 }
 
 function getSettingsIds() {
-  // All the form elements we want to save/restore
   return [
-    'outputFormat', 'outputTheme', 'pdfEngine', 'titlePage', 'toc', 'lof', 'lot',
+    'outputFormat', 'pdfEngine', 'titlePage', 'toc', 'lof', 'lot',
     'numberSections', 'standalone', 'tocDepth', 'tocNewPage', 'topLevelDiv',
     'paperSize', 'orientation', 'marginUnit', 'uniformMargins', 'marginAll',
     'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
@@ -665,14 +856,10 @@ function getCurrentSettings() {
   getSettingsIds().forEach(id => {
     const el = $(id);
     if (el) {
-      if (el.type === 'checkbox') {
-        settings[id] = el.checked;
-      } else {
-        settings[id] = el.value;
-      }
+      settings[id] = el.type === 'checkbox' ? el.checked : el.value;
     }
   });
-  // Also save mermaid format
+  // Also save mermaid format radio
   const mermaidRadio = document.querySelector('input[name="mermaidFormat"]:checked');
   if (mermaidRadio) settings.mermaidFormat = mermaidRadio.value;
   return settings;
@@ -697,8 +884,7 @@ function applySettings(settings) {
   // Trigger UI updates
   $('uniformMargins').dispatchEvent(new Event('change'));
   $('toc').dispatchEvent(new Event('change'));
-  $('codeBlockBg').dispatchEvent(new Event('change'));
-  $('outputFormat').dispatchEvent(new Event('change'));
+  handleFormatChange();
   updateCodePreview();
   updateCommandPreview();
 }
@@ -707,7 +893,9 @@ function updatePresetDropdown() {
   const select = $('presetSelect');
   const presets = getPresets();
   // Clear existing options except first
-  while (select.options.length > 1) select.remove(1);
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
   // Add presets
   Object.keys(presets).sort().forEach(name => {
     const opt = document.createElement('option');
@@ -721,20 +909,40 @@ function setupPresets() {
   updatePresetDropdown();
 
   $('savePreset').addEventListener('click', () => {
-    const name = prompt('Enter preset name:');
-    if (!name) return;
+    // Show the modal
+    $('presetNameInput').value = '';
+    $('presetModal').showModal();
+    $('presetNameInput').focus();
+  });
+
+  // Handle preset save confirmation from modal
+  $('presetSaveConfirm').addEventListener('click', () => {
+    const name = $('presetNameInput').value.trim();
+    if (!name) {
+      showToast('Please enter a preset name', 'warning');
+      return;
+    }
     const presets = getPresets();
     presets[name] = getCurrentSettings();
-    savePresets(presets);
+    savePresetsToStorage(presets);
     updatePresetDropdown();
     $('presetSelect').value = name;
+    $('presetModal').close();
     showToast(`Preset "${name}" saved`, 'success');
+  });
+
+  // Allow Enter key in preset name input
+  $('presetNameInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      $('presetSaveConfirm').click();
+    }
   });
 
   $('loadPreset').addEventListener('click', () => {
     const name = $('presetSelect').value;
     if (!name) {
-      showToast('Select a preset first', 'warning');
+      showToast('Please select a preset first', 'warning');
       return;
     }
     const presets = getPresets();
@@ -747,55 +955,359 @@ function setupPresets() {
   $('updatePreset').addEventListener('click', () => {
     const name = $('presetSelect').value;
     if (!name) {
-      showToast('Select a preset first', 'warning');
+      showToast('Please select a preset first', 'warning');
       return;
     }
     const presets = getPresets();
     presets[name] = getCurrentSettings();
-    savePresets(presets);
+    savePresetsToStorage(presets);
     showToast(`Preset "${name}" updated`, 'success');
   });
 
   $('deletePreset').addEventListener('click', () => {
     const name = $('presetSelect').value;
     if (!name) {
-      showToast('Select a preset first', 'warning');
+      showToast('Please select a preset first', 'warning');
       return;
     }
-    if (!confirm(`Delete preset "${name}"?`)) return;
+    if (!confirm(`Are you sure you want to delete the preset "${name}"?`)) return;
     const presets = getPresets();
     delete presets[name];
-    savePresets(presets);
+    savePresetsToStorage(presets);
     updatePresetDropdown();
     showToast(`Preset "${name}" deleted`, 'info');
   });
 
   // Double-click to load
   $('presetSelect').addEventListener('dblclick', () => {
-    $('loadPreset').click();
+    if ($('presetSelect').value) {
+      $('loadPreset').click();
+    }
   });
 }
 
-// Initialize
-function init() {
+// FAB Menu
+function setupFabMenu() {
+  // Check dependencies
+  $('fabCheckDeps')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    document.activeElement?.blur();
+    await checkDependencies();
+  });
+
+  // Reset to defaults
+  $('fabResetDefaults')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    resetToDefaults();
+    document.activeElement?.blur();
+    showToast('Settings reset to defaults', 'info');
+  });
+
+  // Copy command from FAB
+  $('fabCopyCmd')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const cmd = $('commandPreview').textContent;
+    const singleLineCmd = cmd.replace(/\\\n\s+/g, ' ');
+    navigator.clipboard.writeText(singleLineCmd).then(() => {
+      showToast('Command copied to clipboard!', 'success');
+    }).catch(() => {
+      showToast('Failed to copy command', 'error');
+    });
+    document.activeElement?.blur();
+  });
+}
+
+// Dependency checker with install commands
+const depInstallInfo = {
+  'pandoc': {
+    brew: 'brew install pandoc',
+    apt: 'sudo apt install pandoc',
+    url: 'https://pandoc.org/installing.html'
+  },
+  'tectonic': {
+    brew: 'brew install tectonic',
+    cargo: 'cargo install tectonic',
+    url: 'https://tectonic-typesetting.github.io/'
+  },
+  'lualatex': {
+    brew: 'brew install --cask mactex',
+    apt: 'sudo apt install texlive-full',
+    url: 'https://www.tug.org/texlive/'
+  },
+  'xelatex': {
+    brew: 'brew install --cask mactex',
+    apt: 'sudo apt install texlive-xetex',
+    url: 'https://www.tug.org/texlive/'
+  },
+  'pdflatex': {
+    brew: 'brew install --cask mactex',
+    apt: 'sudo apt install texlive',
+    url: 'https://www.tug.org/texlive/'
+  },
+  'mermaid-filter': {
+    npm: 'npm install -g mermaid-filter',
+    url: 'https://github.com/raghur/mermaid-filter'
+  },
+  'pandoc-crossref': {
+    brew: 'brew install pandoc-crossref',
+    url: 'https://github.com/lierdakil/pandoc-crossref'
+  }
+};
+
+async function checkDependencies() {
+  const modal = $('depsModal');
+  const results = $('depsResults');
+
+  // Show modal with loading state
+  results.innerHTML = `
+    <div class="flex items-center justify-center py-4">
+      <span class="loading loading-spinner loading-md"></span>
+      <span class="ml-2">Checking dependencies...</span>
+    </div>
+  `;
+  modal.showModal();
+
+  const deps = [
+    { name: 'pandoc', cmd: 'pandoc --version', required: true, desc: 'Document converter (required)' },
+    { name: 'tectonic', cmd: 'tectonic --version', required: false, desc: 'PDF engine - auto-downloads packages' },
+    { name: 'lualatex', cmd: 'lualatex --version', required: false, desc: 'PDF engine - best Unicode support' },
+    { name: 'xelatex', cmd: 'xelatex --version', required: false, desc: 'PDF engine - uses system fonts' },
+    { name: 'pdflatex', cmd: 'pdflatex --version', required: false, desc: 'PDF engine - fastest, limited Unicode' },
+    { name: 'mermaid-filter', cmd: 'mermaid-filter --version', required: false, desc: 'Mermaid diagram support' },
+    { name: 'pandoc-crossref', cmd: 'pandoc-crossref --version', required: false, desc: 'Cross-reference filter' },
+  ];
+
+  const checkResults = [];
+
+  if (isTauri) {
+    const { invoke } = await import('@tauri-apps/api/core');
+
+    for (const dep of deps) {
+      try {
+        const result = await invoke('check_command', { command: dep.cmd });
+        const version = extractVersion(result, dep.name);
+        checkResults.push({ ...dep, installed: true, version });
+      } catch (err) {
+        checkResults.push({ ...dep, installed: false, version: null });
+      }
+    }
+  } else {
+    // Web mode - can't check
+    checkResults.push(...deps.map(d => ({ ...d, installed: null, version: 'Cannot check in web mode' })));
+  }
+
+  // Render results
+  results.innerHTML = checkResults.map(dep => {
+    const statusIcon = dep.installed === null
+      ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+      : dep.installed
+        ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${dep.required ? 'text-error' : 'text-base-content/50'}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+
+    const statusClass = dep.installed === null ? 'opacity-70' : (dep.installed ? '' : (dep.required ? 'text-error' : 'opacity-60'));
+
+    // Build install buttons for missing deps
+    let installButtons = '';
+    if (dep.installed === false && depInstallInfo[dep.name]) {
+      const info = depInstallInfo[dep.name];
+      const buttons = [];
+
+      if (info.brew) {
+        buttons.push(`<button class="btn btn-xs btn-primary install-dep-btn" data-cmd="${info.brew}" title="${info.brew}">Homebrew</button>`);
+      }
+      if (info.apt) {
+        buttons.push(`<button class="btn btn-xs btn-secondary install-dep-btn" data-cmd="${info.apt}" title="${info.apt}">apt</button>`);
+      }
+      if (info.npm) {
+        buttons.push(`<button class="btn btn-xs btn-accent install-dep-btn" data-cmd="${info.npm}" title="${info.npm}">npm</button>`);
+      }
+      if (info.cargo) {
+        buttons.push(`<button class="btn btn-xs btn-info install-dep-btn" data-cmd="${info.cargo}" title="${info.cargo}">cargo</button>`);
+      }
+      if (info.url) {
+        buttons.push(`<a href="${info.url}" target="_blank" class="btn btn-xs btn-ghost">Docs</a>`);
+      }
+
+      if (buttons.length > 0) {
+        installButtons = `<div class="flex gap-1 mt-1 flex-wrap">${buttons.join('')}</div>`;
+      }
+    }
+
+    return `
+      <div class="flex items-start gap-3 p-2 rounded-lg bg-base-200 ${statusClass}">
+        <div class="mt-0.5">${statusIcon}</div>
+        <div class="flex-1">
+          <div class="font-medium">${dep.name} ${dep.required ? '<span class="badge badge-xs badge-error">required</span>' : '<span class="badge badge-xs badge-ghost">optional</span>'}</div>
+          <div class="text-xs text-base-content/70">${dep.desc}</div>
+          ${dep.version ? `<div class="text-xs font-mono text-base-content/50">${dep.version}</div>` : ''}
+          ${installButtons}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Add click handlers for install buttons
+  results.querySelectorAll('.install-dep-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const cmd = btn.dataset.cmd;
+      try {
+        await navigator.clipboard.writeText(cmd);
+        showToast(`Command copied: ${cmd}`, 'success');
+      } catch (e) {
+        showToast('Failed to copy command', 'error');
+      }
+    });
+  });
+}
+
+// Extract version from command output
+function extractVersion(output, name) {
+  const lines = output.split('\n');
+  // Try to find a line with version number
+  for (const line of lines) {
+    if (line.toLowerCase().includes('version') || line.match(/\d+\.\d+/)) {
+      return line.trim().substring(0, 60);
+    }
+  }
+  return lines[0]?.trim().substring(0, 60) || 'Installed';
+}
+
+// Reset to defaults
+function resetToDefaults() {
+  // Layout
+  $('paperSize').value = 'a4';
+  $('orientation').value = 'portrait';
+  $('fontSize').value = '12';
+  $('lineHeight').value = '1.5';
+  $('uniformMargins').checked = true;
+  $('marginUnit').value = 'in';
+  $('marginAll').value = '1';
+  $('marginTop').value = '1';
+  $('marginBottom').value = '1';
+  $('marginLeft').value = '1';
+  $('marginRight').value = '1';
+  $('pdfEngine').value = 'tectonic';
+
+  // Fonts
+  $('mainFont').value = '';
+  $('monoFont').value = '';
+  $('highlightTheme').value = 'breezedark';
+  $('lineNumbers').checked = false;
+  $('codeBlockBg').checked = true;
+  $('codeBlockBgColor').value = '#282a36';
+
+  // Document
+  $('titlePage').checked = false;
+  $('toc').checked = false;
+  $('numberSections').checked = false;
+  $('lof').checked = false;
+  $('lot').checked = false;
+  $('standalone').checked = true;
+  $('tocDepth').value = '3';
+  $('tocNewPage').checked = false;
+  $('documentClass').value = 'article';
+  $('topLevelDiv').value = 'default';
+
+  // Content
+  $('docTitle').value = '';
+  $('docAuthor').value = '';
+  $('docDate').value = '';
+  $('headerLeft').value = '';
+  $('headerCenter').value = '';
+  $('headerRight').value = '';
+  $('footerLeft').value = '';
+  $('footerCenter').value = '';
+  $('footerRight').value = '';
+  $('pageNumberFormat').value = 'page';
+  $('pageNumberPosition').value = 'bottom-center';
+  $('pageNumberStyle').value = 'arabic';
+
+  // Advanced
+  $('filterCrossref').checked = false;
+  $('filterCiteproc').checked = false;
+  $('colorLinks').checked = true;
+  $('linkColor').value = '#0066cc';
+  $('extraArgs').value = '';
+  $('openOnComplete').checked = true;
+
+  // Trigger UI updates
+  $('uniformMargins').dispatchEvent(new Event('change'));
+  $('toc').dispatchEvent(new Event('change'));
+  handleFormatChange();
+  updateCodePreview();
+  updateCommandPreview();
+}
+
+// PDF Engine custom dropdown
+function setupPdfEngineDropdown() {
+  const options = document.querySelectorAll('.pdf-engine-option');
+  const label = $('pdfEngineLabel');
+  const hiddenInput = $('pdfEngine');
+
+  options.forEach(option => {
+    option.addEventListener('click', (e) => {
+      // Check if click was on the info-tip icon - if so, don't select
+      if (e.target.closest('.info-tip')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      const value = option.dataset.value;
+      const text = option.querySelector('span:first-child').textContent;
+      label.textContent = text;
+      hiddenInput.value = value;
+      updateCommandPreview();
+
+      // Close dropdown
+      document.activeElement?.blur();
+    });
+  });
+}
+
+// Setup FAB submenu mutual exclusion - only one open at a time
+function setupFabSubmenus() {
+  const fabDetails = document.querySelectorAll('.dropdown-content details');
+  fabDetails.forEach(detail => {
+    detail.addEventListener('toggle', () => {
+      if (detail.open) {
+        // Close other details
+        fabDetails.forEach(other => {
+          if (other !== detail && other.open) {
+            other.open = false;
+          }
+        });
+      }
+    });
+  });
+}
+
+// Initialize everything
+async function init() {
+  // Detect Tauri first
+  await detectTauri();
+
   initTheme();
   loadSystemFonts();
   setupFileHandling();
   setupMargins();
   setupCodePreview();
-  setupFormatHandling();
   setupTocHandling();
+  setupTokenDrag();
   setupCopyCommand();
   setupConversion();
   setupInputListeners();
   setupPresets();
+  setupFabMenu();
+  setupPdfEngineDropdown();
+  setupFabSubmenus();
 
-  $('themeToggle').addEventListener('change', toggleTheme);
+  // Initial format change to set up visibility
+  handleFormatChange();
 
+  // Initial command preview
   updateCommandPreview();
-
-  // Check dependencies on startup
-  checkDependencies();
 }
 
+// Start when DOM is ready
 document.addEventListener('DOMContentLoaded', init);

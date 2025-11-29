@@ -1,0 +1,34 @@
+#!/bin/bash
+# Git prepare-commit-msg hook for version bumping
+# This hook runs BEFORE the commit message editor opens
+# It checks for release flags (--patch, --minor, --major) and bumps version accordingly
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+# Only process if this is a regular commit (not merge, squash, etc.)
+if [ "$COMMIT_SOURCE" = "message" ] || [ -z "$COMMIT_SOURCE" ]; then
+    # Read the commit message
+    COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+    # Check for release flags: --patch, --minor, --major
+    BUMP_TYPE=""
+    if echo "$COMMIT_MSG" | grep -qE "\-\-patch\b"; then
+        BUMP_TYPE="patch"
+    elif echo "$COMMIT_MSG" | grep -qE "\-\-minor\b"; then
+        BUMP_TYPE="minor"
+    elif echo "$COMMIT_MSG" | grep -qE "\-\-major\b"; then
+        BUMP_TYPE="major"
+    fi
+
+    # If release flag found, bump version
+    if [ -n "$BUMP_TYPE" ]; then
+        echo "Detected --$BUMP_TYPE flag - bumping version..."
+
+        # Run the bump script
+        if [ -f "./scripts/bump-version.sh" ]; then
+            ./scripts/bump-version.sh "$BUMP_TYPE"
+        fi
+    fi
+fi

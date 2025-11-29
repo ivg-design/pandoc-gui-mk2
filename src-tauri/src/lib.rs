@@ -1,0 +1,117 @@
+use std::process::Command;
+use std::env;
+
+// Get extended PATH including common installation directories
+fn get_extended_path() -> String {
+    let current_path = env::var("PATH").unwrap_or_default();
+    let home = env::var("HOME").unwrap_or_default();
+
+    if cfg!(target_os = "macos") {
+        // macOS common paths for Homebrew, MacPorts, TeX, etc.
+        let extra_paths = vec![
+            "/usr/local/bin".to_string(),
+            "/opt/homebrew/bin".to_string(),
+            "/opt/local/bin".to_string(),
+            "/Library/TeX/texbin".to_string(),
+            "/usr/texbin".to_string(),
+            format!("{}/bin", home),
+            format!("{}/.local/bin", home),
+            format!("{}/.cargo/bin", home),
+        ];
+        format!("{}:{}", extra_paths.join(":"), current_path)
+    } else if cfg!(target_os = "linux") {
+        let extra_paths = vec![
+            "/usr/local/bin".to_string(),
+            format!("{}/bin", home),
+            format!("{}/.local/bin", home),
+            format!("{}/.cargo/bin", home),
+            "/usr/local/texlive/2024/bin/x86_64-linux".to_string(),
+            "/usr/local/texlive/2023/bin/x86_64-linux".to_string(),
+        ];
+        format!("{}:{}", extra_paths.join(":"), current_path)
+    } else {
+        current_path
+    }
+}
+
+#[tauri::command]
+fn check_command(command: String) -> Result<String, String> {
+    let extended_path = get_extended_path();
+
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", &command])
+            .output()
+    } else {
+        Command::new("sh")
+            .args(["-c", &command])
+            .env("PATH", &extended_path)
+            .output()
+    };
+
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                Ok(String::from_utf8_lossy(&output.stdout).to_string())
+            } else {
+                Err(format!("Command failed: {}", String::from_utf8_lossy(&output.stderr)))
+            }
+        }
+        Err(e) => Err(format!("Failed to execute: {}", e)),
+    }
+}
+
+#[tauri::command]
+fn run_pandoc(command: String) -> Result<String, String> {
+    let extended_path = get_extended_path();
+
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", &command])
+            .output()
+    } else {
+        Command::new("sh")
+            .args(["-c", &command])
+            .env("PATH", &extended_path)
+            .output()
+    };
+
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                Ok(String::from_utf8_lossy(&output.stdout).to_string())
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                Err(format!("{}\n{}", stderr, stdout))
+            }
+        }
+        Err(e) => Err(format!("Failed to execute pandoc: {}", e)),
+    }
+}
+
+#[tauri::command]
+fn open_file(path: String) -> Result<(), String> {
+    open::that(&path).map_err(|e| format!("Failed to open file: {}", e))
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .setup(|app| {
+            if cfg!(debug_assertions) {
+                app.handle().plugin(
+                    tauri_plugin_log::Builder::default()
+                        .level(log::LevelFilter::Info)
+                        .build(),
+                )?;
+            }
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

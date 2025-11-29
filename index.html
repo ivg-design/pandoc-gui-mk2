@@ -7,267 +7,236 @@
   <link rel="stylesheet" href="/src/style.css">
   <link rel="icon" href="/icon.png" type="image/png">
 </head>
-<body class="min-h-screen bg-base-100">
-  <!-- Navbar -->
-  <div class="navbar bg-base-200 shadow-sm px-4 min-h-12">
-    <div class="flex-1 gap-2">
-      <img src="/icon.png" alt="Pandoc GUI" class="w-6 h-6">
-      <span class="font-bold">Pandoc GUI</span>
-    </div>
-    <div class="flex-none gap-2">
-      <!-- Theme Dropdown -->
-      <div class="dropdown dropdown-end">
-        <button class="btn btn-ghost btn-sm" title="Theme">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18C8.68629 18 6 15.3137 6 12C6 8.68629 8.68629 6 12 6C15.3137 6 18 8.68629 18 12C18 15.3137 15.3137 18 12 18ZM12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16ZM11 1H13V4H11V1ZM11 20H13V23H11V20ZM3.51472 4.92893L4.92893 3.51472L7.05025 5.63604L5.63604 7.05025L3.51472 4.92893ZM16.9497 18.364L18.364 16.9497L20.4853 19.0711L19.0711 20.4853L16.9497 18.364ZM19.0711 3.51472L20.4853 4.92893L18.364 7.05025L16.9497 5.63604L19.0711 3.51472ZM5.63604 16.9497L7.05025 18.364L4.92893 20.4853L3.51472 19.0711L5.63604 16.9497ZM23 11V13H20V11H23ZM4 11V13H1V11H4Z"/></svg>
-        </button>
-        <ul class="dropdown-content z-[1] menu p-2 shadow bg-base-300 rounded-box w-52">
-          <li><a data-theme="dim" id="theme-dim">Dim (default)</a></li>
-          <li><a data-theme="light" id="theme-light">Light</a></li>
-          <li><a data-theme="dark" id="theme-dark">Dark</a></li>
-          <li><a data-theme="cupcake" id="theme-cupcake">Cupcake</a></li>
-        </ul>
-      </div>
-      <!-- Theme Toggle -->
-      <label class="swap swap-rotate btn btn-ghost btn-sm btn-circle">
-        <input type="checkbox" id="themeToggle" />
-        <svg class="swap-on h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z"/></svg>
-        <svg class="swap-off h-5 w-5 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z"/></svg>
-      </label>
-    </div>
-  </div>
+<body class="min-h-screen bg-base-100 text-base-content text-sm">
 
-  <!-- Main Content -->
-  <div class="max-w-6xl mx-auto p-4 space-y-4">
+  <div class="p-3 space-y-3 max-w-5xl mx-auto">
 
-    <!-- File I/O Section -->
-    <div class="card bg-base-200 shadow">
-      <div class="card-body p-4 space-y-3">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          <!-- Input File -->
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text font-semibold">Input File</span></label>
-            <div class="flex gap-2">
-              <input type="text" id="inputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Select input file..." readonly>
-              <button id="browseInput" class="btn btn-sm btn-outline">Browse</button>
+    <!-- File I/O + PDF Engine Section -->
+    <div class="card bg-base-200">
+      <div class="card-body p-3 space-y-2">
+        <!-- Input File Row -->
+        <div class="flex items-center gap-2">
+          <button id="browseInput" class="btn btn-primary btn-sm gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/></svg>
+            Open
+          </button>
+          <span id="inputPath" class="flex-1 text-sm font-mono truncate text-base-content/70">No file selected</span>
+          <input type="file" id="inputFile" class="hidden" accept=".md,.markdown,.rst,.tex,.latex,.docx,.doc,.html,.htm,.org,.txt,.adoc,.asciidoc,.epub,.odt,.rtf,.json,.yaml,.yml">
+          <div id="pdfEngineSection" class="w-44">
+            <div class="dropdown dropdown-end w-full">
+              <div tabindex="0" role="button" class="btn btn-sm w-full justify-between font-normal">
+                <span id="pdfEngineLabel">Tectonic</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+              <ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-50 w-72 p-2 shadow-lg">
+                <li><a class="pdf-engine-option flex justify-between items-center" data-value="tectonic">
+                  <span>Tectonic</span>
+                  <div class="tooltip tooltip-left" data-tip="Auto-downloads LaTeX packages. No TeX install needed.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </a></li>
+                <li><a class="pdf-engine-option flex justify-between items-center" data-value="lualatex">
+                  <span>LuaLaTeX</span>
+                  <div class="tooltip tooltip-left" data-tip="Best Unicode & OpenType fonts. Slower but powerful.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </a></li>
+                <li><a class="pdf-engine-option flex justify-between items-center" data-value="xelatex">
+                  <span>XeLaTeX</span>
+                  <div class="tooltip tooltip-left" data-tip="Good Unicode. Uses system fonts. Faster than LuaLaTeX.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </a></li>
+                <li><a class="pdf-engine-option flex justify-between items-center" data-value="pdflatex">
+                  <span>pdfLaTeX</span>
+                  <div class="tooltip tooltip-left" data-tip="Classic, fastest. Limited Unicode. Simple ASCII docs.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </a></li>
+              </ul>
             </div>
-            <input type="file" id="inputFile" class="hidden" accept=".md,.markdown,.rst,.tex,.latex,.docx,.doc,.html,.htm,.org,.txt,.adoc,.asciidoc,.epub,.odt,.rtf,.json,.yaml,.yml">
-          </div>
-
-          <!-- Output Path -->
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text font-semibold">Output Path</span></label>
-            <div class="flex gap-2">
-              <input type="text" id="outputPath" class="input input-bordered input-sm flex-1 font-mono text-xs" placeholder="Output location...">
-              <button id="browseOutput" class="btn btn-sm btn-outline">Browse</button>
-            </div>
+            <input type="hidden" id="pdfEngine" value="tectonic">
           </div>
         </div>
 
-        <!-- Format & Output Style -->
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-sm font-medium">Format</span></label>
-            <select id="outputFormat" class="select select-bordered select-sm">
-              <option value="pdf" selected>PDF</option>
-              <option value="docx">Word (.docx)</option>
-              <option value="odt">OpenDocument</option>
-              <option value="html">HTML</option>
-              <option value="epub">EPUB</option>
-              <option value="latex">LaTeX</option>
-              <option value="pptx">PowerPoint</option>
-              <option value="markdown">Markdown</option>
-              <option value="rst">reStructuredText</option>
-              <option value="plain">Plain Text</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-sm font-medium">Output Style</span></label>
-            <select id="outputTheme" class="select select-bordered select-sm">
-              <option value="auto">Auto</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </div>
-          <div class="form-control">
-            <label class="label py-1"><span class="label-text text-sm font-medium">PDF Engine</span></label>
-            <select id="pdfEngine" class="select select-bordered select-sm" style="display:none;">
-              <option value="tectonic" selected>Tectonic</option>
-              <option value="lualatex">LuaLaTeX</option>
-              <option value="xelatex">XeLaTeX</option>
-              <option value="pdflatex">pdfLaTeX</option>
-              <option value="weasyprint">WeasyPrint</option>
-            </select>
-            <div id="pdfEngineWrapper"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Presets Section -->
-    <div class="card bg-base-200 shadow">
-      <div class="card-body p-4">
-        <div class="flex gap-2 items-center flex-wrap">
-          <select id="presetSelect" class="select select-bordered select-sm flex-1 min-w-48">
-            <option value="">Select preset...</option>
+        <!-- Output Row -->
+        <div class="flex items-center gap-2">
+          <button id="browseOutput" class="btn btn-ghost btn-sm btn-square" title="Change output folder">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          </button>
+          <input type="text" id="outputName" class="input input-bordered input-sm flex-1 font-mono text-sm" placeholder="output filename">
+          <span class="text-lg font-bold text-base-content/50">.</span>
+          <select id="outputFormat" class="select select-bordered select-sm w-24">
+            <option value="pdf">pdf</option>
+            <option value="docx">docx</option>
+            <option value="html">html</option>
+            <option value="epub">epub</option>
+            <option value="odt">odt</option>
+            <option value="latex">tex</option>
+            <option value="pptx">pptx</option>
+            <option value="markdown">md</option>
+            <option value="rst">rst</option>
+            <option value="plain">txt</option>
           </select>
-          <button id="loadPreset" class="btn btn-sm btn-outline" title="Load preset">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-            Load
-          </button>
-          <button id="savePreset" class="btn btn-sm btn-outline" title="Save current settings as preset">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
-            Save
-          </button>
-          <button id="updatePreset" class="btn btn-sm btn-outline" title="Update selected preset">
-            Update
-          </button>
-          <button id="deletePreset" class="btn btn-sm btn-outline btn-error" title="Delete selected preset">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            Delete
-          </button>
+        </div>
+
+        <!-- Output path display -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-base-content/50">Output:</span>
+          <span id="outputDir" class="text-xs font-mono truncate text-base-content/70">Select input file first</span>
         </div>
       </div>
     </div>
 
-    <!-- Tabs Section with Fixed Height -->
-    <div class="card bg-base-200 shadow">
+    <!-- Main Options Tabs -->
+    <div class="card bg-base-200">
       <div class="card-body p-0">
-        <div class="tabs tabs-box">
+        <div role="tablist" class="tabs tabs-lifted">
+
           <!-- Layout Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Layout" checked />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-4">
-              <!-- Paper Size, Orientation, Unit -->
-              <div class="grid grid-cols-3 gap-2">
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Size</span></label>
-                  <select id="paperSize" class="select select-bordered select-xs">
-                    <option value="a4" selected>A4</option>
-                    <option value="letter">Letter</option>
-                    <option value="a5">A5</option>
-                    <option value="legal">Legal</option>
-                  </select>
-                </div>
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Orientation</span></label>
-                  <select id="orientation" class="select select-bordered select-xs">
-                    <option value="portrait" selected>Portrait</option>
-                    <option value="landscape">Landscape</option>
-                  </select>
-                </div>
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Unit</span></label>
-                  <select id="marginUnit" class="select select-bordered select-xs">
-                    <option value="in" selected>inches</option>
-                    <option value="cm">cm</option>
-                    <option value="mm">mm</option>
-                  </select>
-                </div>
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Layout" checked />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="grid grid-cols-4 gap-3 items-end">
+              <!-- Paper Settings -->
+              <div class="form-control">
+                <label class="label py-0.5">
+                  <span class="label-text">Paper Size</span>
+                  <div class="tooltip tooltip-left" data-tip="Physical paper dimensions">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <select id="paperSize" class="select select-bordered select-sm w-full">
+                  <option value="a4">A4</option>
+                  <option value="letter">Letter</option>
+                  <option value="a5">A5</option>
+                  <option value="legal">Legal</option>
+                </select>
+              </div>
+              <div class="form-control">
+                <label class="label py-0.5"><span class="label-text">Orientation</span></label>
+                <select id="orientation" class="select select-bordered select-sm w-full">
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </div>
+              <div class="form-control">
+                <label class="label py-0.5">
+                  <span class="label-text">Font Size (pt)</span>
+                  <div class="tooltip tooltip-left" data-tip="Base font size for body text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <input type="number" id="fontSize" class="input input-bordered input-sm w-full" value="12" min="6" max="72" step="0.5">
+              </div>
+              <div class="form-control">
+                <label class="label py-0.5">
+                  <span class="label-text">Line Height</span>
+                  <div class="tooltip tooltip-left" data-tip="Space between lines">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <select id="lineHeight" class="select select-bordered select-sm w-full">
+                  <option value="1">Single</option>
+                  <option value="1.15">1.15</option>
+                  <option value="1.5" selected>1.5</option>
+                  <option value="2">Double</option>
+                </select>
               </div>
 
-              <div class="divider my-2"></div>
+              <!-- Margins Row -->
+              <div class="col-span-4">
+                <div class="divider my-1 text-xs">Margins</div>
+              </div>
 
-              <!-- Margins -->
-              <div class="flex items-center gap-2">
-                <label class="label py-0 cursor-pointer gap-1">
-                  <input type="checkbox" id="uniformMargins" class="checkbox checkbox-sm" checked>
-                  <span class="label-text text-xs">Uniform margins</span>
+              <!-- Uniform toggle + Unit + All Sides on same row -->
+              <div class="form-control">
+                <label class="label py-0.5"><span class="label-text">Uniform</span></label>
+                <label class="swap swap-flip h-8 w-full bg-base-200 rounded-lg border border-base-300 flex items-center justify-center">
+                  <input type="checkbox" id="uniformMargins" checked>
+                  <span class="swap-on text-primary font-bold">ON</span>
+                  <span class="swap-off text-base-content/50">OFF</span>
                 </label>
               </div>
 
-              <div id="uniformMarginInput" class="form-control">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs w-20">All sides:</span>
-                  <input type="number" id="marginAll" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
-                </div>
-              </div>
-
-              <div id="individualMargins" class="grid grid-cols-2 gap-2 hidden">
-                <div class="flex items-center gap-2">
-                  <span class="text-xs w-12">Top:</span>
-                  <input type="number" id="marginTop" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs w-12">Bottom:</span>
-                  <input type="number" id="marginBottom" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs w-12">Left:</span>
-                  <input type="number" id="marginLeft" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-xs w-12">Right:</span>
-                  <input type="number" id="marginRight" class="input input-bordered input-xs flex-1" value="1" step="0.25" min="0">
-                </div>
-              </div>
-
-              <div class="divider my-2"></div>
-
-              <!-- Font Size & Line Height -->
-              <div class="grid grid-cols-2 gap-2">
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Font Size</span></label>
-                  <div class="flex gap-1">
-                    <input type="number" id="fontSize" class="input input-bordered input-xs flex-1" value="12" min="6" max="72" step="0.5">
-                    <span class="text-xs self-center">pt</span>
-                  </div>
-                </div>
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Line Height</span></label>
-                  <select id="lineHeight" class="select select-bordered select-xs">
-                    <option value="1">Single</option>
-                    <option value="1.15">1.15</option>
-                    <option value="1.5" selected>1.5</option>
-                    <option value="2">Double</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="divider my-2"></div>
-
-              <!-- Document Class -->
               <div class="form-control">
-                <label class="label py-0"><span class="label-text text-xs">Document Class</span></label>
-                <select id="documentClass" class="select select-bordered select-xs">
-                  <option value="article">Article</option>
-                  <option value="report">Report</option>
-                  <option value="book">Book</option>
-                  <option value="memoir">Memoir</option>
-                  <option value="scrartcl">KOMA Article</option>
+                <label class="label py-0.5"><span class="label-text">Unit</span></label>
+                <select id="marginUnit" class="select select-bordered select-sm w-full">
+                  <option value="in">in</option>
+                  <option value="cm">cm</option>
+                  <option value="mm">mm</option>
                 </select>
+              </div>
+
+              <div id="uniformMarginInput" class="form-control col-span-2">
+                <label class="label py-0.5"><span class="label-text">All Sides</span></label>
+                <input type="number" id="marginAll" class="input input-bordered input-sm w-full" value="1" step="0.25" min="0">
+              </div>
+
+              <!-- Individual margins (shown when uniform is off) - 4 in same row -->
+              <div id="individualMargins" class="hidden col-span-4 grid grid-cols-4 gap-3">
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Top</span></label>
+                  <input type="number" id="marginTop" class="input input-bordered input-sm w-full" value="1" step="0.25" min="0">
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Bottom</span></label>
+                  <input type="number" id="marginBottom" class="input input-bordered input-sm w-full" value="1" step="0.25" min="0">
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Left</span></label>
+                  <input type="number" id="marginLeft" class="input input-bordered input-sm w-full" value="1" step="0.25" min="0">
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Right</span></label>
+                  <input type="number" id="marginRight" class="input input-bordered input-sm w-full" value="1" step="0.25" min="0">
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Typography Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Typography" />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-4">
-              <div class="grid grid-cols-2 gap-2">
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs font-medium">Main Font</span></label>
-                  <select id="mainFont" class="select select-bordered select-xs">
-                    <option value="">System Default</option>
-                  </select>
-                </div>
-                <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs font-medium">Mono Font</span></label>
-                  <select id="monoFont" class="select select-bordered select-xs">
-                    <option value="">System Default</option>
-                  </select>
-                </div>
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Fonts" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="grid grid-cols-4 gap-3 items-end">
+              <div class="form-control col-span-2">
+                <label class="label py-0.5">
+                  <span class="label-text">Main Font</span>
+                  <div class="tooltip tooltip-left" data-tip="Primary typeface for body text">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <select id="mainFont" class="select select-bordered select-sm w-full">
+                  <option value="">System Default</option>
+                </select>
+              </div>
+              <div class="form-control col-span-2">
+                <label class="label py-0.5">
+                  <span class="label-text">Monospace Font</span>
+                  <div class="tooltip tooltip-left" data-tip="Fixed-width font for code blocks">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <select id="monoFont" class="select select-bordered select-sm w-full">
+                  <option value="">System Default</option>
+                </select>
               </div>
 
-              <div class="divider my-2"></div>
+              <div class="col-span-4">
+                <div class="divider my-1 text-xs">Code Highlighting</div>
+              </div>
 
               <div class="form-control">
-                <label class="label py-0"><span class="label-text text-xs font-medium">Syntax Theme</span></label>
-                <select id="highlightTheme" class="select select-bordered select-xs w-full">
+                <label class="label py-0.5">
+                  <span class="label-text">Theme</span>
+                  <div class="tooltip tooltip-left" data-tip="Color scheme for code blocks">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <select id="highlightTheme" class="select select-bordered select-sm w-full">
                   <optgroup label="Light">
                     <option value="pygments">Pygments</option>
                     <option value="kate">Kate</option>
                     <option value="tango">Tango</option>
-                    <option value="espresso">Espresso</option>
                   </optgroup>
                   <optgroup label="Dark">
                     <option value="breezedark" selected>Breeze Dark</option>
@@ -275,344 +244,436 @@
                     <option value="nord">Nord</option>
                     <option value="dracula">Dracula</option>
                     <option value="monokai">Monokai</option>
-                    <option value="gruvbox-dark">Gruvbox Dark</option>
-                    <option value="solarized-dark">Solarized Dark</option>
+                    <option value="gruvbox-dark">Gruvbox</option>
+                    <option value="solarized-dark">Solarized</option>
                   </optgroup>
                 </select>
               </div>
 
-              <!-- Code Preview -->
-              <div id="codePreview" class="rounded text-xs font-mono p-3 mt-2 overflow-hidden border border-base-300">
-                <div><span class="cm">// Greeting function</span></div>
-                <div><span class="kw">function</span> <span class="fn">hello</span>() {</div>
-                <div>  <span class="kw">const</span> msg = <span class="st">"Hello"</span>;</div>
-                <div>  <span class="kw">return</span> msg; <span class="cm">// result</span></div>
-                <div>}</div>
-              </div>
-
-              <div class="flex items-center gap-4 mt-2">
-                <label class="label py-0 cursor-pointer gap-1">
-                  <input type="checkbox" id="lineNumbers" class="checkbox checkbox-xs">
-                  <span class="label-text text-xs">Line numbers</span>
-                </label>
-                <label class="label py-0 cursor-pointer gap-1">
-                  <input type="checkbox" id="codeBlockBg" class="checkbox checkbox-xs" checked>
-                  <span class="label-text text-xs">Background</span>
+              <div class="form-control">
+                <label class="label py-0.5"><span class="label-text">Line Numbers</span></label>
+                <label class="swap swap-flip h-8 w-full bg-base-200 rounded-lg border border-base-300 flex items-center justify-center">
+                  <input type="checkbox" id="lineNumbers">
+                  <span class="swap-on text-primary font-bold">ON</span>
+                  <span class="swap-off text-base-content/50">OFF</span>
                 </label>
               </div>
 
-              <div id="bgColorPicker" class="flex items-center gap-2">
-                <span class="text-xs">BG Color:</span>
-                <input type="color" id="codeBlockBgColor" class="w-10 h-8 rounded cursor-pointer border-0" value="#282a36">
+              <div class="form-control">
+                <label class="label py-0.5"><span class="label-text">Background</span></label>
+                <label class="swap swap-flip h-8 w-full bg-base-200 rounded-lg border border-base-300 flex items-center justify-center">
+                  <input type="checkbox" id="codeBlockBg" checked>
+                  <span class="swap-on text-primary font-bold">ON</span>
+                  <span class="swap-off text-base-content/50">OFF</span>
+                </label>
+              </div>
+
+              <div class="form-control">
+                <label class="label py-0.5"><span class="label-text">BG Color</span></label>
+                <input type="color" id="codeBlockBgColor" class="w-full h-8 rounded cursor-pointer border border-base-300" value="#282a36">
+              </div>
+
+              <div class="col-span-4">
+                <label class="label py-0.5"><span class="label-text text-xs">Preview</span></label>
+                <div id="codePreview" class="rounded-lg p-3 font-mono text-xs border border-base-300">
+                  <div><span class="cm">// Greeting function</span></div>
+                  <div><span class="kw">function</span> <span class="fn">hello</span>() {</div>
+                  <div>  <span class="kw">const</span> msg = <span class="st">"Hello, World!"</span>;</div>
+                  <div>  <span class="kw">return</span> msg;</div>
+                  <div>}</div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Document Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Document" />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-4">
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Structure Options</h3>
-                <div class="grid grid-cols-2 gap-2">
-                  <label class="label py-1 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="titlePage" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">Title Page</span>
-                    <div class="tooltip tooltip-right" data-tip="Creates a separate title page with title, author, and date centered. Use metadata fields below to set values.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label class="label py-1 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="toc" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">Table of Contents</span>
-                    <div class="tooltip tooltip-right" data-tip="Auto-generates a clickable TOC from headings in your document.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label class="label py-1 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="lof" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">List of Figures</span>
-                    <div class="tooltip tooltip-right" data-tip="Requires: Images with captions. Use: ![caption](image.png). LaTeX readers insert a caption.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label class="label py-1 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="lot" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">List of Tables</span>
-                    <div class="tooltip tooltip-right" data-tip="Requires: Tables with captions. Use pandoc table syntax with captions.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label class="label py-1 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="numberSections" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">Number Sections</span>
-                    <div class="tooltip tooltip-right" data-tip="Automatically numbers all sections: 1. Intro, 1.1 Background...">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label id="standaloneLabel" class="label py-1 cursor-pointer justify-start gap-2 hidden">
-                    <input type="checkbox" id="standalone" class="checkbox checkbox-xs" checked>
-                    <span class="label-text text-xs">Standalone</span>
-                    <div class="tooltip tooltip-right" data-tip="Complete HTML/LaTeX with doctype and headers. Disable to create a fragment for embedding.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- TOC Options -->
-              <div id="tocOptions" class="hidden space-y-2 pl-3 border-l-2 border-primary/30">
-                <div class="flex items-center gap-3">
-                  <span class="text-xs w-24">TOC Depth:</span>
-                  <input type="range" id="tocDepth" min="1" max="6" value="3" class="range range-xs range-primary flex-1">
-                  <span id="tocDepthValue" class="text-xs w-4">3</span>
-                </div>
-                <label class="label py-0 cursor-pointer justify-start gap-2">
-                  <input type="checkbox" id="tocNewPage" class="checkbox checkbox-xs">
-                  <span class="label-text text-xs">New page after TOC</span>
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Document" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="space-y-3">
+              <!-- Structure Options -->
+              <div class="grid grid-cols-3 gap-2">
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="titlePage" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">Title Page</span>
+                    <p class="text-xs text-base-content/60">Separate title page</p>
+                  </div>
+                </label>
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="toc" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">Table of Contents</span>
+                    <p class="text-xs text-base-content/60">Auto from headings</p>
+                  </div>
+                </label>
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="numberSections" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">Number Sections</span>
+                    <p class="text-xs text-base-content/60">1. Intro, 1.1 Sub...</p>
+                  </div>
+                </label>
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="lof" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">List of Figures</span>
+                    <p class="text-xs text-base-content/60">Figure index</p>
+                  </div>
+                </label>
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="lot" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">List of Tables</span>
+                    <p class="text-xs text-base-content/60">Table index</p>
+                  </div>
+                </label>
+                <label id="standaloneLabel" class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2 hidden">
+                  <input type="checkbox" id="standalone" class="checkbox checkbox-primary checkbox-sm" checked>
+                  <div>
+                    <span class="label-text font-medium text-sm">Standalone</span>
+                    <p class="text-xs text-base-content/60">Complete document</p>
+                  </div>
                 </label>
               </div>
 
-              <div class="divider my-2"></div>
-
-              <!-- Top-level division -->
-              <div class="form-control">
-                <div class="flex items-center gap-2">
-                  <label class="label py-0"><span class="label-text text-xs">Top-Level Headings</span></label>
-                  <div class="tooltip tooltip-right" data-tip="Controls how H1 headings are rendered: Chapter (page breaks), Section (inline), or Part (major divisions).">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  </div>
+              <!-- TOC Options -->
+              <div id="tocOptions" class="hidden bg-base-200 rounded-lg p-3">
+                <div class="flex items-center gap-4">
+                  <span class="text-sm font-medium">TOC Depth:</span>
+                  <input type="range" id="tocDepth" min="1" max="6" value="3" class="range range-primary range-xs w-32">
+                  <span id="tocDepthValue" class="badge badge-primary badge-sm">3</span>
+                  <label class="label cursor-pointer gap-2">
+                    <input type="checkbox" id="tocNewPage" class="checkbox checkbox-xs">
+                    <span class="label-text text-sm">New page after TOC</span>
+                  </label>
                 </div>
-                <select id="topLevelDiv" class="select select-bordered select-xs w-full mt-1">
-                  <option value="default" selected>Default</option>
-                  <option value="part">Part</option>
-                  <option value="chapter">Chapter</option>
-                  <option value="section">Section</option>
-                </select>
+              </div>
+
+              <!-- Document Class & Top Level Division -->
+              <div class="grid grid-cols-2 gap-3">
+                <div class="form-control">
+                  <label class="label py-0.5">
+                    <span class="label-text">Document Class</span>
+                    <div class="tooltip tooltip-left" data-tip="LaTeX document class type">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                    </div>
+                  </label>
+                  <select id="documentClass" class="select select-bordered select-sm w-full">
+                    <option value="article">Article</option>
+                    <option value="report">Report</option>
+                    <option value="book">Book</option>
+                    <option value="memoir">Memoir</option>
+                    <option value="scrartcl">KOMA Article</option>
+                  </select>
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5">
+                    <span class="label-text">Top-Level Headings</span>
+                    <div class="tooltip tooltip-left" data-tip="How # headings are interpreted">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                    </div>
+                  </label>
+                  <select id="topLevelDiv" class="select select-bordered select-sm w-full">
+                    <option value="default">Default</option>
+                    <option value="part">Parts</option>
+                    <option value="chapter">Chapters</option>
+                    <option value="section">Sections</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Content Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Content" />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-4">
-              <!-- Shared Tokens Reference -->
-              <div class="text-xs bg-base-300 rounded p-2">
-                <div class="font-semibold mb-1">Available tokens:</div>
-                <div class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-base-content/80">
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{today}</code> Today</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{year}</code> Year</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{file}</code> Filename</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{user}</code> Username</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{title}</code> Doc title</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{author}</code> Author</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{date}</code> Doc date</span>
-                  <span><code class="bg-base-100 px-1 rounded text-xs">{page}</code> Page #</span>
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Content" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="space-y-3">
+              <!-- Tokens Reference -->
+              <div class="collapse collapse-arrow bg-base-200 rounded-lg">
+                <input type="checkbox" id="tokensCollapse" checked />
+                <div class="collapse-title py-2 min-h-0 font-medium text-sm">
+                  Tokens (drag to fields)
+                </div>
+                <div class="collapse-content pb-2">
+                  <div class="flex flex-wrap gap-1.5" id="tokenList">
+                    <span class="badge badge-primary badge-sm cursor-grab gap-1" draggable="true" data-token="{today}">{today}</span>
+                    <span class="badge badge-primary badge-sm cursor-grab gap-1" draggable="true" data-token="{year}">{year}</span>
+                    <span class="badge badge-secondary badge-sm cursor-grab gap-1" draggable="true" data-token="{file}">{file}</span>
+                    <span class="badge badge-secondary badge-sm cursor-grab gap-1" draggable="true" data-token="{user}">{user}</span>
+                    <span class="badge badge-accent badge-sm cursor-grab gap-1" draggable="true" data-token="{title}">{title}</span>
+                    <span class="badge badge-accent badge-sm cursor-grab gap-1" draggable="true" data-token="{author}">{author}</span>
+                    <span class="badge badge-accent badge-sm cursor-grab gap-1" draggable="true" data-token="{date}">{date}</span>
+                    <span class="badge badge-info badge-sm cursor-grab gap-1" draggable="true" data-token="{page}">{page}</span>
+                    <span class="badge badge-info badge-sm cursor-grab gap-1" draggable="true" data-token="{pages}">{pages}</span>
+                    <span class="badge badge-warning badge-sm cursor-grab gap-1" draggable="true" data-token="{section}">{section}</span>
+                    <span class="badge badge-warning badge-sm cursor-grab gap-1" draggable="true" data-token="{chapter}">{chapter}</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Headers/Footers Grid -->
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Headers & Footers</h3>
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Left</span></label>
-                    <input type="text" id="headerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{title}">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Center</span></label>
-                    <input type="text" id="headerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Right</span></label>
-                    <input type="text" id="headerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{page}">
-                  </div>
-                </div>
-                <div class="text-xs text-base-content/60 mt-1 mb-2">Header fields</div>
-
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Left</span></label>
-                    <input type="text" id="footerLeft" class="input input-bordered input-xs w-full font-mono" placeholder="{author}">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Center</span></label>
-                    <input type="text" id="footerCenter" class="input input-bordered input-xs w-full font-mono" placeholder="Page {page}">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Right</span></label>
-                    <input type="text" id="footerRight" class="input input-bordered input-xs w-full font-mono" placeholder="{date}">
-                  </div>
-                </div>
-                <div class="text-xs text-base-content/60 mt-1">Footer fields</div>
-              </div>
-
-              <div class="divider my-2"></div>
-
-              <!-- Page Numbering & Metadata -->
-              <div class="grid grid-cols-3 gap-2">
+              <!-- Metadata -->
+              <div class="grid grid-cols-3 gap-3">
                 <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Page Format</span></label>
-                  <select id="pageNumberFormat" class="select select-bordered select-xs w-full">
-                    <option value="page" selected>Page N</option>
-                    <option value="page-of">Page N of X</option>
-                    <option value="number">N</option>
+                  <label class="label py-0.5"><span class="label-text">Title</span></label>
+                  <input type="text" id="docTitle" class="input input-bordered input-sm w-full" placeholder="{file}">
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Author</span></label>
+                  <input type="text" id="docAuthor" class="input input-bordered input-sm w-full" placeholder="{user}">
+                </div>
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Date</span></label>
+                  <input type="text" id="docDate" class="input input-bordered input-sm w-full" placeholder="{today}">
+                </div>
+              </div>
+
+              <!-- Headers & Footers -->
+              <div class="grid grid-cols-6 gap-2">
+                <div class="col-span-6 text-xs font-medium text-base-content/70">Headers</div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="headerLeft" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Left">
+                </div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="headerCenter" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Center">
+                </div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="headerRight" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Right">
+                </div>
+                <div class="col-span-6 text-xs font-medium text-base-content/70 mt-1">Footers</div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="footerLeft" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Left">
+                </div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="footerCenter" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Page {page}">
+                </div>
+                <div class="form-control col-span-2">
+                  <input type="text" id="footerRight" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="Right">
+                </div>
+              </div>
+
+              <!-- Page Numbers -->
+              <div class="grid grid-cols-3 gap-3">
+                <div class="form-control">
+                  <label class="label py-0.5"><span class="label-text">Page Format</span></label>
+                  <select id="pageNumberFormat" class="select select-bordered select-sm w-full">
+                    <option value="page">Page N</option>
+                    <option value="page-of">N of X</option>
+                    <option value="number">N only</option>
                   </select>
                 </div>
                 <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Position</span></label>
-                  <select id="pageNumberPosition" class="select select-bordered select-xs w-full">
-                    <option value="bottom-center" selected>Bottom Center</option>
+                  <label class="label py-0.5"><span class="label-text">Position</span></label>
+                  <select id="pageNumberPosition" class="select select-bordered select-sm w-full">
+                    <option value="bottom-center">Bottom Center</option>
                     <option value="bottom-right">Bottom Right</option>
                     <option value="top-right">Top Right</option>
                   </select>
                 </div>
                 <div class="form-control">
-                  <label class="label py-0"><span class="label-text text-xs">Style</span></label>
-                  <select id="pageNumberStyle" class="select select-bordered select-xs w-full">
-                    <option value="arabic" selected>1, 2, 3</option>
+                  <label class="label py-0.5"><span class="label-text">Style</span></label>
+                  <select id="pageNumberStyle" class="select select-bordered select-sm w-full">
+                    <option value="arabic">1, 2, 3</option>
                     <option value="roman">i, ii, iii</option>
                     <option value="Roman">I, II, III</option>
                   </select>
-                </div>
-              </div>
-
-              <div class="divider my-2"></div>
-
-              <!-- Metadata -->
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Document Metadata</h3>
-                <div class="grid grid-cols-1 gap-2">
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Title</span></label>
-                    <input type="text" id="docTitle" class="input input-bordered input-xs w-full" placeholder="{file}">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Author</span></label>
-                    <input type="text" id="docAuthor" class="input input-bordered input-xs w-full" placeholder="{user}">
-                  </div>
-                  <div class="form-control">
-                    <label class="label py-0"><span class="label-text text-xs">Date</span></label>
-                    <input type="text" id="docDate" class="input input-bordered input-xs w-full" placeholder="{today}">
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Advanced Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Advanced" />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-4">
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Advanced" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="space-y-3">
               <!-- Mermaid -->
-              <div>
-                <div class="flex items-center gap-2 mb-2">
-                  <span class="text-sm font-semibold">Mermaid Diagrams</span>
-                  <span id="mermaidDetected" class="badge badge-xs badge-ghost hidden">detected</span>
-                </div>
-                <div class="flex items-center gap-3">
-                  <label class="label py-0 cursor-pointer gap-1">
-                    <input type="radio" name="mermaidFormat" value="svg" class="radio radio-xs" checked>
-                    <span class="label-text text-xs">SVG</span>
-                  </label>
-                  <label class="label py-0 cursor-pointer gap-1">
-                    <input type="radio" name="mermaidFormat" value="png" class="radio radio-xs">
-                    <span class="label-text text-xs">PNG</span>
-                  </label>
-                </div>
+              <div class="flex items-center gap-3 flex-wrap">
+                <span class="font-medium text-sm">Mermaid Diagrams</span>
+                <span id="mermaidDetected" class="badge badge-success badge-sm hidden">Detected</span>
+                <label class="label cursor-pointer gap-1.5">
+                  <input type="radio" name="mermaidFormat" value="svg" class="radio radio-primary radio-xs" checked>
+                  <span class="label-text text-sm">SVG</span>
+                </label>
+                <label class="label cursor-pointer gap-1.5">
+                  <input type="radio" name="mermaidFormat" value="png" class="radio radio-primary radio-xs">
+                  <span class="label-text text-sm">PNG</span>
+                </label>
               </div>
 
-              <div class="divider my-2"></div>
-
-              <!-- Processing Filters -->
-              <div>
-                <span class="text-sm font-semibold">Processing Filters</span>
-                <div class="flex flex-col gap-2 mt-2">
-                  <label class="label py-0 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="filterCrossref" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">pandoc-crossref</span>
-                    <div class="tooltip tooltip-right" data-tip="Use @fig:name for figures, @eq:name for equations, @sec:name for sections. Label items with {#fig:name}.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                  <label class="label py-0 cursor-pointer justify-start gap-2">
-                    <input type="checkbox" id="filterCiteproc" class="checkbox checkbox-xs">
-                    <span class="label-text text-xs">citeproc</span>
-                    <div class="tooltip tooltip-right" data-tip="Process citations and bibliographies. Use [@key] to cite. Requires .bib file and bibliography.csl.">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <div class="divider my-2"></div>
-
-              <!-- Extra Arguments -->
-              <div class="form-control">
-                <div class="flex items-center gap-2">
-                  <label class="label py-0"><span class="label-text text-xs">Extra Arguments</span></label>
-                  <div class="tooltip tooltip-right" data-tip="Additional pandoc flags. Examples: --shift-heading-level-by=-1, --wrap=none, --columns=80">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <!-- Filters -->
+              <div class="flex flex-wrap gap-2">
+                <label class="label cursor-pointer gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="filterCrossref" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">pandoc-crossref</span>
+                    <p class="text-xs text-base-content/60">@fig:name, @eq:name</p>
                   </div>
-                </div>
-                <input type="text" id="extraArgs" class="input input-bordered input-xs font-mono mt-1" placeholder="--wrap=none">
+                </label>
+                <label class="label cursor-pointer gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="filterCiteproc" class="checkbox checkbox-primary checkbox-sm">
+                  <div>
+                    <span class="label-text font-medium text-sm">citeproc</span>
+                    <p class="text-xs text-base-content/60">[@key] citations</p>
+                  </div>
+                </label>
               </div>
-
-              <div class="divider my-2"></div>
 
               <!-- Link Colors -->
               <div class="flex items-center gap-3">
-                <label class="label py-0 cursor-pointer gap-1">
-                  <input type="checkbox" id="colorLinks" class="checkbox checkbox-xs" checked>
-                  <span class="label-text text-xs">Colored links</span>
+                <label class="label cursor-pointer gap-2">
+                  <input type="checkbox" id="colorLinks" class="checkbox checkbox-primary checkbox-sm" checked>
+                  <span class="label-text text-sm">Colored links</span>
                 </label>
+                <input type="color" id="linkColor" class="w-8 h-6 rounded cursor-pointer border border-base-300" value="#0066cc">
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs">Link color:</span>
-                <input type="color" id="linkColor" class="w-10 h-8 rounded cursor-pointer border-0" value="#0066cc">
+
+              <!-- Extra Arguments -->
+              <div class="form-control">
+                <label class="label py-0.5">
+                  <span class="label-text text-sm">Extra Pandoc Arguments</span>
+                  <span class="label-text-alt text-xs">Advanced</span>
+                </label>
+                <input type="text" id="extraArgs" class="input input-bordered input-sm w-full font-mono text-xs" placeholder="--wrap=none --columns=80">
               </div>
             </div>
           </div>
 
-          <!-- Command Reference Tab -->
-          <input type="radio" name="optionTabs" class="tab" aria-label="Command" />
-          <div class="tab-content bg-base-100 border-base-300 p-4 overflow-y-auto" style="height: 600px;">
-            <div class="space-y-3">
-              <h3 class="text-sm font-semibold">Pandoc Command</h3>
-              <code id="commandPreview" class="block p-3 bg-base-300 rounded text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words" style="max-height: 300px;">pandoc input.md -o output.pdf</code>
-              <button id="copyCmd" class="btn btn-sm btn-outline w-full">Copy to Clipboard</button>
+          <!-- Command Tab -->
+          <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Command" />
+          <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
+            <div class="space-y-2">
+              <code id="commandPreview" class="block p-3 bg-base-300 rounded-lg text-xs font-mono whitespace-pre-wrap break-all max-h-48 overflow-y-auto">pandoc input.md -o output.pdf</code>
+              <button id="copyCmd" class="btn btn-outline btn-sm gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                Copy
+              </button>
             </div>
           </div>
+
         </div>
       </div>
     </div>
 
     <!-- Convert Section -->
-    <div class="card bg-base-200 shadow">
-      <div class="card-body p-4 space-y-3">
-        <div class="flex gap-2">
-          <button id="convertBtn" class="btn btn-primary btn-lg flex-1 gap-2" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-            Convert
+    <div class="card bg-base-200">
+      <div class="card-body p-3">
+        <div class="flex items-center gap-3">
+          <button id="convertBtn" class="btn btn-primary flex-1 gap-2" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Convert Document
           </button>
-          <label class="label py-0 cursor-pointer gap-1 text-xs self-center">
-            <input type="checkbox" id="openOnComplete" class="checkbox checkbox-sm" checked>
-            <span>Open</span>
+          <label class="label cursor-pointer gap-2 bg-base-300 rounded-lg px-3 py-1.5">
+            <span class="label-text text-sm">Open when done</span>
+            <input type="checkbox" id="openOnComplete" class="toggle toggle-primary toggle-sm" checked>
           </label>
+          <!-- FAB Menu (inline) -->
+          <div class="dropdown dropdown-top dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-circle btn-ghost">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+            </div>
+            <ul tabindex="0" class="dropdown-content menu bg-base-300 rounded-box z-50 w-56 p-2 shadow-lg mb-2">
+              <!-- Presets Submenu -->
+              <li>
+                <details>
+                  <summary>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    Presets
+                  </summary>
+                  <ul class="bg-base-200 rounded-box p-2 min-w-48">
+                    <li class="mb-2">
+                      <select id="presetSelect" class="select select-bordered select-sm w-full" size="4">
+                        <option value="">Select preset...</option>
+                      </select>
+                    </li>
+                    <li><a id="loadPreset">Load</a></li>
+                    <li><a id="savePreset">Save New</a></li>
+                    <li><a id="updatePreset">Update</a></li>
+                    <li><a id="deletePreset" class="text-error">Delete</a></li>
+                  </ul>
+                </details>
+              </li>
+              <!-- Theme Submenu -->
+              <li>
+                <details>
+                  <summary>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    Theme
+                  </summary>
+                  <ul class="bg-base-200 rounded-box">
+                    <li><a data-set-theme="dim">Dim</a></li>
+                    <li><a data-set-theme="dark">Dark</a></li>
+                    <li><a data-set-theme="nord">Nord</a></li>
+                    <li><a data-set-theme="dracula">Dracula</a></li>
+                    <li><a data-set-theme="sunset">Sunset</a></li>
+                    <li><a data-set-theme="light">Light</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li class="divider my-1"></li>
+              <li><a id="fabCheckDeps"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Check Dependencies</a></li>
+              <li><a id="fabResetDefaults"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Reset Defaults</a></li>
+              <li><a id="fabCopyCmd"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg> Copy Command</a></li>
+            </ul>
+          </div>
         </div>
 
-        <div id="statusArea" class="hidden">
-          <progress id="progressBar" class="progress progress-primary w-full h-2"></progress>
-          <p id="statusText" class="text-center text-sm mt-2"></p>
+        <!-- Status Area -->
+        <div id="statusArea" class="hidden mt-2">
+          <div class="flex items-center gap-2">
+            <progress id="progressBar" class="progress progress-primary flex-1 h-2"></progress>
+            <span id="statusText" class="text-xs font-medium"></span>
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Toast Notifications -->
-  <div id="toastContainer" class="toast toast-end toast-bottom"></div>
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast toast-end toast-bottom z-50"></div>
+
+
+  <!-- Preset Save Modal -->
+  <dialog id="presetModal" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Save Preset</h3>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Preset Name</span>
+        </label>
+        <input type="text" id="presetNameInput" class="input input-bordered w-full" placeholder="Enter preset name...">
+      </div>
+      <div class="modal-action">
+        <button id="presetSaveConfirm" class="btn btn-primary">Save</button>
+        <form method="dialog">
+          <button class="btn">Cancel</button>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+
+  <!-- Dependency Check Modal -->
+  <dialog id="depsModal" class="modal">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg mb-4">Dependency Check</h3>
+      <div id="depsResults" class="space-y-2">
+        <div class="flex items-center justify-center py-4">
+          <span class="loading loading-spinner loading-md"></span>
+          <span class="ml-2">Checking dependencies...</span>
+        </div>
+      </div>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Close</button>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
 
   <script src="/src/main.js" type="module"></script>
 </body>
