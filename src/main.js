@@ -11,12 +11,13 @@ let isTauri = false;
 const installedDeps = {
   pandoc: false,
   tectonic: false,
-  lualatex: false,
-  xelatex: false,
-  pdflatex: false,
+  texlive: false,  // Consolidated: includes pdflatex, xelatex, lualatex
   'mermaid-filter': false,
   'pandoc-crossref': false
 };
+
+// Track active event listener to prevent leaks
+let activeDepListener = null;
 
 // Detect Tauri environment
 async function detectTauri() {
@@ -790,6 +791,12 @@ function buildPandocCommand() {
       args.push(`-V 'urlcolor=[HTML]{${color}}'`);
     }
 
+    // Dark mode for PDF - uses pagecolor and xcolor packages
+    if ($('darkMode') && $('darkMode').checked) {
+      // Add header-includes for dark mode
+      args.push('-V header-includes="\\\\usepackage{pagecolor}\\\\usepackage{xcolor}\\\\pagecolor[HTML]{1e1e2e}\\\\color[HTML]{cdd6f4}"');
+    }
+
     // Headers and Footers - only add if user specifies custom content
     const headerLeft = replaceHeaderFooterTokens(getTokenFieldValue($('headerLeft')));
     const headerCenter = replaceHeaderFooterTokens(getTokenFieldValue($('headerCenter')));
@@ -807,7 +814,9 @@ function buildPandocCommand() {
     let pageNumStr = '';
     if (pageFormat === 'page') {
       pageNumStr = 'Page \\thepage';
-    } else if (pageFormat === 'page-of') {
+    } else if (pageFormat === 'page-of-x') {
+      pageNumStr = 'Page \\thepage\\ of \\pageref{LastPage}';
+    } else if (pageFormat === 'n-of-x') {
       pageNumStr = '\\thepage\\ of \\pageref{LastPage}';
     } else {
       pageNumStr = '\\thepage';
@@ -921,6 +930,12 @@ function buildPandocCommand() {
     if (mermaidFormat === 'svg') {
       args.push('-M mermaid-format=svg');
     }
+  }
+
+  // Dark mode for HTML/EPUB
+  const isHtmlLike = ['html', 'epub'].includes(format);
+  if (isHtmlLike && $('darkMode') && $('darkMode').checked) {
+    args.push('--css=data:text/css,body{background-color:%231e1e2e;color:%23cdd6f4}a{color:%2389b4fa}pre,code{background-color:%23313244}');
   }
 
   // Other filters
@@ -1089,7 +1104,7 @@ function savePresetsToStorage(presets) {
 function getSettingsIds() {
   return [
     'outputFormat', 'pdfEngine', 'titlePage', 'toc', 'lof', 'lot',
-    'numberSections', 'standalone', 'tocDepth', 'tocNewPage', 'topLevelDiv',
+    'numberSections', 'standalone', 'darkMode', 'tocDepth', 'tocNewPage', 'topLevelDiv',
     'paperSize', 'orientation', 'marginUnit', 'uniformMargins', 'marginAll',
     'marginTop', 'marginBottom', 'marginLeft', 'marginRight',
     'headerLeft', 'headerCenter', 'headerRight', 'footerLeft', 'footerCenter', 'footerRight',
@@ -1296,20 +1311,11 @@ const depInstallInfo = {
     cargo: 'cargo install tectonic',
     url: 'https://tectonic-typesetting.github.io/'
   },
-  'lualatex': {
-    brew: 'brew install --cask mactex',
-    apt: 'sudo apt install texlive-full',
-    url: 'https://www.tug.org/texlive/'
-  },
-  'xelatex': {
-    brew: 'brew install --cask mactex',
-    apt: 'sudo apt install texlive-xetex',
-    url: 'https://www.tug.org/texlive/'
-  },
-  'pdflatex': {
-    brew: 'brew install --cask mactex',
-    apt: 'sudo apt install texlive',
-    url: 'https://www.tug.org/texlive/'
+  'texlive': {
+    brew: 'brew install --cask basictex',
+    apt: 'sudo apt install texlive-latex-base texlive-fonts-recommended texlive-latex-extra',
+    url: 'https://www.tug.org/texlive/',
+    note: 'BasicTeX (~100MB). Use tlmgr to install additional packages if needed.'
   },
   'mermaid-filter': {
     npm: 'npm install -g mermaid-filter',
@@ -1336,10 +1342,8 @@ async function checkDependencies() {
 
   const deps = [
     { name: 'pandoc', cmd: 'pandoc --version', required: true, desc: 'Document converter (required)' },
-    { name: 'tectonic', cmd: 'tectonic --version', required: false, desc: 'PDF engine - auto-downloads packages' },
-    { name: 'lualatex', cmd: 'lualatex --version', required: false, desc: 'PDF engine - best Unicode support' },
-    { name: 'xelatex', cmd: 'xelatex --version', required: false, desc: 'PDF engine - uses system fonts' },
-    { name: 'pdflatex', cmd: 'pdflatex --version', required: false, desc: 'PDF engine - fastest, limited Unicode' },
+    { name: 'tectonic', cmd: 'tectonic --version', required: false, desc: 'PDF engine - auto-downloads packages (recommended)' },
+    { name: 'texlive', cmd: 'pdflatex --version', required: false, desc: 'TeX Live - includes pdflatex, xelatex, lualatex' },
     { name: 'mermaid-filter', cmd: 'which mermaid-filter', required: false, desc: 'Mermaid diagram support' },
     { name: 'pandoc-crossref', cmd: 'pandoc-crossref --version', required: false, desc: 'Cross-reference filter' },
   ];
@@ -1387,28 +1391,36 @@ async function checkDependencies() {
       const buttons = [];
 
       if (info.brew) {
-        buttons.push(`<button class="btn btn-xs btn-primary install-dep-btn" data-cmd="${info.brew}" data-dep="${dep.name}" title="${info.brew}">Homebrew</button>`);
+        buttons.push(`<button class="btn btn-xs btn-primary install-dep-btn" data-method="brew" data-dep="${dep.name}" title="Install via Homebrew">Homebrew</button>`);
       }
       if (info.apt) {
-        buttons.push(`<button class="btn btn-xs btn-secondary install-dep-btn" data-cmd="${info.apt}" data-dep="${dep.name}" title="${info.apt}">apt</button>`);
+        buttons.push(`<button class="btn btn-xs btn-secondary install-dep-btn" data-method="apt" data-dep="${dep.name}" title="Install via apt">apt</button>`);
       }
       if (info.npm) {
-        buttons.push(`<button class="btn btn-xs btn-accent install-dep-btn" data-cmd="${info.npm}" data-dep="${dep.name}" title="${info.npm}">npm</button>`);
+        buttons.push(`<button class="btn btn-xs btn-accent install-dep-btn" data-method="npm" data-dep="${dep.name}" title="Install via npm">npm</button>`);
       }
       if (info.cargo) {
-        buttons.push(`<button class="btn btn-xs btn-info install-dep-btn" data-cmd="${info.cargo}" data-dep="${dep.name}" title="${info.cargo}">cargo</button>`);
+        buttons.push(`<button class="btn btn-xs btn-info install-dep-btn" data-method="cargo" data-dep="${dep.name}" title="Install via cargo">cargo</button>`);
       }
       if (info.url) {
         buttons.push(`<a href="${info.url}" target="_blank" class="btn btn-xs btn-ghost">Docs</a>`);
       }
-
-      if (buttons.length > 0) {
+      // Show note for texlive (special case - no auto-install)
+      if (info.note) {
+        actionButtons = `<div class="flex flex-col gap-1 mt-1">
+          <span class="text-xs text-base-content/60">${info.note}</span>
+          <div class="flex gap-1">${buttons.join('')}</div>
+        </div>`;
+      } else if (buttons.length > 0) {
         actionButtons = `<div class="flex gap-1 mt-1 flex-wrap">${buttons.join('')}</div>`;
       }
     } else if (dep.installed === true && dep.name !== 'pandoc') {
-      // Uninstall button for installed optional deps (not pandoc - it's required)
+      // Reinstall and Uninstall buttons for installed optional deps
+      const info = depInstallInfo[dep.name];
+      const defaultMethod = info?.brew ? 'brew' : (info?.npm ? 'npm' : (info?.cargo ? 'cargo' : 'brew'));
       actionButtons = `<div class="flex gap-1 mt-1">
-        <button class="btn btn-xs btn-ghost btn-error uninstall-dep-btn" data-dep="${dep.name}" title="Uninstall ${dep.name}">Uninstall</button>
+        <button class="btn btn-xs btn-ghost reinstall-dep-btn" data-dep="${dep.name}" data-method="${defaultMethod}" title="Reinstall ${dep.name}">Reinstall</button>
+        <button class="btn btn-xs btn-ghost text-error uninstall-dep-btn" data-dep="${dep.name}" title="Uninstall ${dep.name}">Uninstall</button>
       </div>`;
     }
 
@@ -1428,94 +1440,152 @@ async function checkDependencies() {
   // Add click handlers for install buttons
   results.querySelectorAll('.install-dep-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const cmd = btn.dataset.cmd;
+      const method = btn.dataset.method;
       const depName = btn.dataset.dep;
-      const row = btn.closest('[data-dep-row]');
 
       if (isTauri) {
-        // Show cancel button in place of install buttons
-        const actionsDiv = btn.parentElement;
-        const originalHTML = actionsDiv.innerHTML;
-        actionsDiv.innerHTML = `
-          <button class="btn btn-xs btn-warning cancel-install-btn">
-            <span class="loading loading-spinner loading-xs"></span>
-            Cancel Install
-          </button>
-        `;
+        await runDepOperation('install_dependency', { name: depName, method }, `Installing ${depName}`);
+      } else {
+        // Web mode - show info
+        showToast(`Run: brew install ${depName} (or npm/cargo equivalent)`, 'info');
+      }
+    });
+  });
 
-        const cancelBtn = actionsDiv.querySelector('.cancel-install-btn');
-        let cancelled = false;
+  // Add click handlers for reinstall buttons
+  results.querySelectorAll('.reinstall-dep-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const method = btn.dataset.method;
+      const depName = btn.dataset.dep;
 
-        cancelBtn.addEventListener('click', async () => {
-          try {
-            const { invoke } = await import('@tauri-apps/api/core');
-            await invoke('cancel_all_installs');
-            cancelled = true;
-            showToast('Installation cancelled', 'warning');
-            actionsDiv.innerHTML = originalHTML;
-            // Re-attach handlers
-            checkDependencies();
-          } catch (e) {
-            showToast(`Failed to cancel: ${e}`, 'error');
-          }
+      if (isTauri) {
+        // Use Tauri's dialog API for proper async confirmation
+        const { ask } = await import('@tauri-apps/plugin-dialog');
+        const confirmed = await ask(`Reinstall ${depName}? This will uninstall and reinstall the package.`, {
+          title: 'Confirm Reinstall',
+          kind: 'warning'
         });
 
-        showToast(`Installing ${depName}... This may take a minute.`, 'info');
-
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('install_dependency', { command: cmd });
-
-          if (!cancelled) {
-            actionsDiv.innerHTML = `<span class="text-success text-xs">✓ Installed</span>`;
-            showToast(`Successfully installed ${depName}!`, 'success');
-            setTimeout(() => checkDependencies(), 2000);
-          }
-        } catch (e) {
-          if (!cancelled) {
-            actionsDiv.innerHTML = originalHTML;
-            showToast(`Install failed: ${e}`, 'error');
-          }
+        if (!confirmed) {
+          return;
         }
-      } else {
-        // Web mode - just copy to clipboard
-        try {
-          await navigator.clipboard.writeText(cmd);
-          showToast(`Command copied: ${cmd}`, 'success');
-        } catch (e) {
-          showToast('Failed to copy command', 'error');
-        }
+
+        await runDepOperation('reinstall_dependency', { name: depName, method }, `Reinstalling ${depName}`);
       }
     });
   });
 
   // Add click handlers for uninstall buttons
   results.querySelectorAll('.uninstall-dep-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const depName = btn.dataset.dep;
 
-      if (!confirm(`Are you sure you want to uninstall ${depName}?`)) {
-        return;
-      }
-
       if (isTauri) {
-        const originalHTML = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = `<span class="loading loading-spinner loading-xs"></span>`;
+        // Use Tauri's dialog API for proper async confirmation
+        const { ask } = await import('@tauri-apps/plugin-dialog');
+        const confirmed = await ask(`Are you sure you want to uninstall ${depName}?`, {
+          title: 'Confirm Uninstall',
+          kind: 'warning'
+        });
 
-        try {
-          const { invoke } = await import('@tauri-apps/api/core');
-          await invoke('uninstall_dependency', { name: depName });
-          showToast(`${depName} uninstalled successfully`, 'success');
-          setTimeout(() => checkDependencies(), 1000);
-        } catch (e) {
-          btn.innerHTML = originalHTML;
-          btn.disabled = false;
-          showToast(`Uninstall failed: ${e}`, 'error');
+        if (!confirmed) {
+          return;
         }
+
+        await runDepOperation('uninstall_dependency', { name: depName }, `Uninstalling ${depName}`);
       }
     });
   });
+}
+
+// Run a dependency operation with progress modal
+async function runDepOperation(command, params, title) {
+  const progressModal = $('progressModal');
+  const progressTitle = $('progressTitle');
+  const progressCommand = $('progressCommand');
+  const progressOutput = $('progressOutput');
+  const cancelBtn = $('progressCancelBtn');
+  const closeBtn = $('progressCloseBtn');
+
+  // Clean up any previous listener
+  if (activeDepListener) {
+    activeDepListener();
+    activeDepListener = null;
+  }
+
+  // Reset modal
+  progressTitle.textContent = title;
+  progressCommand.textContent = '';
+  progressOutput.textContent = 'Starting...\n';
+  cancelBtn.classList.remove('hidden');
+  closeBtn.classList.add('hidden');
+
+  // Show modal FIRST before setting up listeners
+  progressModal.showModal();
+
+  // Setup event listener for output
+  const { listen } = await import('@tauri-apps/api/event');
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  activeDepListener = await listen('command-output', (event) => {
+    const data = event.payload;
+
+    if (data.type === 'start') {
+      progressCommand.textContent = data.command;
+      progressOutput.textContent = `> ${data.command}\n\n`;
+    } else if (data.type === 'stdout' || data.type === 'stderr') {
+      progressOutput.textContent += data.line + '\n';
+      // Auto-scroll to bottom
+      progressOutput.scrollTop = progressOutput.scrollHeight;
+    } else if (data.type === 'end') {
+      if (data.success) {
+        progressOutput.textContent += `\n✓ ${data.message}\n`;
+      } else {
+        progressOutput.textContent += `\n✗ ${data.message}\n`;
+      }
+      // Show close button, hide cancel
+      cancelBtn.classList.add('hidden');
+      closeBtn.classList.remove('hidden');
+    }
+  });
+
+  // Cancel button handler
+  const handleCancel = async () => {
+    try {
+      await invoke('cancel_all_installs');
+      progressOutput.textContent += '\n⚠ Operation cancelled\n';
+      cancelBtn.classList.add('hidden');
+      closeBtn.classList.remove('hidden');
+    } catch (e) {
+      progressOutput.textContent += `\nFailed to cancel: ${e}\n`;
+    }
+  };
+
+  cancelBtn.onclick = handleCancel;
+
+  // Close button handler
+  closeBtn.onclick = () => {
+    progressModal.close();
+    if (activeDepListener) {
+      activeDepListener();
+      activeDepListener = null;
+    }
+    // Refresh dependency list
+    checkDependencies();
+  };
+
+  // Run the command
+  try {
+    await invoke(command, params);
+  } catch (e) {
+    progressOutput.textContent += `\n✗ Error: ${e}\n`;
+    cancelBtn.classList.add('hidden');
+    closeBtn.classList.remove('hidden');
+  }
 }
 
 // Extract version from command output
@@ -1532,8 +1602,7 @@ function extractVersion(output, name) {
 
 // Update UI features based on installed dependencies
 function updateFeatureAvailability() {
-  const hasPdfEngine = installedDeps.tectonic || installedDeps.lualatex ||
-                       installedDeps.xelatex || installedDeps.pdflatex;
+  const hasPdfEngine = installedDeps.tectonic || installedDeps.texlive;
   const hasMermaid = installedDeps['mermaid-filter'];
   const hasCrossref = installedDeps['pandoc-crossref'];
 
@@ -1552,7 +1621,17 @@ function updateFeatureAvailability() {
       const menuItems = pdfSection.querySelectorAll('ul li');
       menuItems.forEach(li => {
         const engineName = li.dataset.engine;
-        if (engineName && !installedDeps[engineName]) {
+        if (!engineName) return;
+
+        // Map engine names to installed deps
+        let isInstalled = false;
+        if (engineName === 'tectonic') {
+          isInstalled = installedDeps.tectonic;
+        } else if (['lualatex', 'xelatex', 'pdflatex'].includes(engineName)) {
+          isInstalled = installedDeps.texlive;
+        }
+
+        if (!isInstalled) {
           li.classList.add('opacity-40');
           li.querySelector('a')?.classList.add('pointer-events-none');
           const label = li.querySelector('span');
@@ -1560,7 +1639,7 @@ function updateFeatureAvailability() {
             label.dataset.originalText = label.textContent;
             label.textContent += ' (not installed)';
           }
-        } else if (engineName) {
+        } else {
           li.classList.remove('opacity-40');
           li.querySelector('a')?.classList.remove('pointer-events-none');
           const label = li.querySelector('span');
@@ -1570,6 +1649,28 @@ function updateFeatureAvailability() {
           }
         }
       });
+
+      // Auto-select first available engine if current selection isn't installed
+      const currentEngine = $('pdfEngine')?.value;
+      const currentEngineInstalled =
+        (currentEngine === 'tectonic' && installedDeps.tectonic) ||
+        (['lualatex', 'xelatex', 'pdflatex'].includes(currentEngine) && installedDeps.texlive);
+
+      if (!currentEngineInstalled) {
+        // Find first available engine
+        let firstAvailable = null;
+        if (installedDeps.tectonic) firstAvailable = 'tectonic';
+        else if (installedDeps.texlive) firstAvailable = 'pdflatex';
+
+        if (firstAvailable) {
+          const pdfEngineHidden = $('pdfEngine');
+          const pdfEngineLabel = $('pdfEngineLabel');
+          if (pdfEngineHidden && pdfEngineLabel) {
+            pdfEngineHidden.value = firstAvailable;
+            pdfEngineLabel.textContent = firstAvailable === 'tectonic' ? 'Tectonic' : 'pdfLaTeX';
+          }
+        }
+      }
     }
   }
 
@@ -1616,9 +1717,7 @@ async function checkDependenciesSilent() {
   const deps = [
     { name: 'pandoc', cmd: 'pandoc --version' },
     { name: 'tectonic', cmd: 'tectonic --version' },
-    { name: 'lualatex', cmd: 'lualatex --version' },
-    { name: 'xelatex', cmd: 'xelatex --version' },
-    { name: 'pdflatex', cmd: 'pdflatex --version' },
+    { name: 'texlive', cmd: 'pdflatex --version' },  // Check for TeX Live via pdflatex
     { name: 'mermaid-filter', cmd: 'which mermaid-filter' },
     { name: 'pandoc-crossref', cmd: 'pandoc-crossref --version' },
   ];
@@ -1674,8 +1773,10 @@ function resetToDefaults() {
   $('standalone').checked = true;
   $('tocDepth').value = '3';
   $('tocNewPage').checked = false;
-  $('documentClass').value = 'article';
+  $('documentClass').value = 'report';
+  $('documentClassLabel').textContent = 'Report';
   $('topLevelDiv').value = 'default';
+  if ($('darkMode')) $('darkMode').checked = false;
 
   // Content (use innerHTML for contenteditable fields)
   $('docTitle').innerHTML = '';
@@ -1772,7 +1873,7 @@ function setupFabMenu2() {
     e.stopPropagation();
   });
 
-  // Setup accordion triggers - click only, allow multiple open
+  // Setup accordion triggers - only one open at a time
   const accordions = fabMenu.querySelectorAll('.fab-accordion');
   accordions.forEach(accordion => {
     const trigger = accordion.querySelector('.fab-accordion-trigger');
@@ -1781,8 +1882,13 @@ function setupFabMenu2() {
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // Simply toggle this accordion (allow multiple open)
-      accordion.classList.toggle('open');
+      const isOpen = accordion.classList.contains('open');
+      // Close all other accordions first
+      accordions.forEach(acc => acc.classList.remove('open'));
+      // Toggle this one (if it was closed, open it)
+      if (!isOpen) {
+        accordion.classList.add('open');
+      }
     });
   });
 

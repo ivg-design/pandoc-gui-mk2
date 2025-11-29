@@ -22,13 +22,14 @@
           </button>
           <span id="inputPath" class="flex-1 text-sm font-mono truncate text-base-content/70">No file selected</span>
           <input type="file" id="inputFile" class="hidden" accept=".md,.markdown,.rst,.tex,.latex,.docx,.doc,.html,.htm,.org,.txt,.adoc,.asciidoc,.epub,.odt,.rtf,.json,.yaml,.yml">
-          <div id="pdfEngineSection" class="w-44">
+          <!-- PDF Engine dropdown (RIGHT side) -->
+          <div id="pdfEngineSection" class="w-44 flex-shrink-0">
             <div class="dropdown dropdown-end w-full">
               <div tabindex="0" role="button" class="btn btn-sm w-full justify-between font-normal">
                 <span id="pdfEngineLabel">Tectonic</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-50 w-72 p-2 shadow-lg">
+              <ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-50 w-64 p-2 shadow-lg">
                 <li data-engine="tectonic"><a class="pdf-engine-option flex justify-between items-center" data-value="tectonic">
                   <span>Tectonic</span>
                   <div class="tooltip tooltip-left" data-tip="Auto-downloads LaTeX packages. No TeX install needed.">
@@ -37,19 +38,19 @@
                 </a></li>
                 <li data-engine="lualatex"><a class="pdf-engine-option flex justify-between items-center" data-value="lualatex">
                   <span>LuaLaTeX</span>
-                  <div class="tooltip tooltip-left" data-tip="Best Unicode & OpenType fonts. Slower but powerful.">
+                  <div class="tooltip tooltip-left" data-tip="Best Unicode & OpenType fonts. Slower but powerful. Requires TeX Live.">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </a></li>
                 <li data-engine="xelatex"><a class="pdf-engine-option flex justify-between items-center" data-value="xelatex">
                   <span>XeLaTeX</span>
-                  <div class="tooltip tooltip-left" data-tip="Good Unicode. Uses system fonts. Faster than LuaLaTeX.">
+                  <div class="tooltip tooltip-left" data-tip="Good Unicode. Uses system fonts. Faster than LuaLaTeX. Requires TeX Live.">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </a></li>
                 <li data-engine="pdflatex"><a class="pdf-engine-option flex justify-between items-center" data-value="pdflatex">
                   <span>pdfLaTeX</span>
-                  <div class="tooltip tooltip-left" data-tip="Classic, fastest. Limited Unicode. Simple ASCII docs.">
+                  <div class="tooltip tooltip-left" data-tip="Classic, fastest. Limited Unicode. Simple ASCII docs. Requires TeX Live.">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </a></li>
@@ -98,20 +99,22 @@
           <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
             <div class="grid grid-cols-4 gap-3 items-end">
               <!-- Paper Settings -->
+              <!-- Column 1 (LEFT) -->
               <div class="form-control">
                 <label class="label py-0.5">
                   <span class="label-text">Paper Size</span>
-                  <div class="tooltip tooltip-left" data-tip="Physical paper dimensions">
+                  <div class="tooltip tooltip-right" data-tip="Physical paper dimensions">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </label>
                 <select id="paperSize" class="select select-bordered select-sm w-full">
-                  <option value="a4">A4</option>
-                  <option value="letter">Letter</option>
-                  <option value="a5">A5</option>
-                  <option value="legal">Legal</option>
+                  <option value="a4">A4 (210×297mm)</option>
+                  <option value="a3">A3 (297×420mm)</option>
+                  <option value="letter">Letter (8.5×11in)</option>
+                  <option value="legal">Legal (8.5×14in)</option>
                 </select>
               </div>
+              <!-- Column 2 (LEFT) -->
               <div class="form-control">
                 <label class="label py-0.5"><span class="label-text">Orientation</span></label>
                 <select id="orientation" class="select select-bordered select-sm w-full">
@@ -119,6 +122,7 @@
                   <option value="landscape">Landscape</option>
                 </select>
               </div>
+              <!-- Column 3 (RIGHT) -->
               <div class="form-control">
                 <label class="label py-0.5">
                   <span class="label-text">Font Size (pt)</span>
@@ -128,6 +132,7 @@
                 </label>
                 <input type="number" id="fontSize" class="input input-bordered input-sm w-full" value="12" min="6" max="72" step="0.5">
               </div>
+              <!-- Column 4 (RIGHT) -->
               <div class="form-control">
                 <label class="label py-0.5">
                   <span class="label-text">Line Height</span>
@@ -198,10 +203,11 @@
           <input type="radio" name="mainTabs" role="tab" class="tab" aria-label="Fonts" />
           <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-3">
             <div class="grid grid-cols-4 gap-3 items-end">
+              <!-- Columns 1-2 (LEFT) -->
               <div class="form-control col-span-2">
                 <label class="label py-0.5">
                   <span class="label-text">Main Font</span>
-                  <div class="tooltip tooltip-left" data-tip="Primary typeface for body text">
+                  <div class="tooltip tooltip-right" data-tip="Primary typeface for body text">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </label>
@@ -209,6 +215,7 @@
                   <option value="">System Default</option>
                 </select>
               </div>
+              <!-- Columns 3-4 (RIGHT) -->
               <div class="form-control col-span-2">
                 <label class="label py-0.5">
                   <span class="label-text">Monospace Font</span>
@@ -225,10 +232,11 @@
                 <div class="divider my-1 text-xs">Code Highlighting</div>
               </div>
 
+              <!-- Column 1 (LEFT) -->
               <div class="form-control">
                 <label class="label py-0.5">
                   <span class="label-text">Theme</span>
-                  <div class="tooltip tooltip-left" data-tip="Color scheme for code blocks">
+                  <div class="tooltip tooltip-right" data-tip="Color scheme for code blocks">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </label>
@@ -313,18 +321,37 @@
                     <p class="text-xs text-base-content/60">1. Intro, 1.1 Sub...</p>
                   </div>
                 </label>
+                <!-- Column 1 row 2 (LEFT) -->
                 <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
                   <input type="checkbox" id="lof" class="checkbox checkbox-primary checkbox-sm">
-                  <div>
+                  <div class="flex-1">
                     <span class="label-text font-medium text-sm">List of Figures</span>
                     <p class="text-xs text-base-content/60">Figure index</p>
                   </div>
+                  <div class="tooltip tooltip-right" data-tip="Requires figures with captions: ![Caption](image.png). Use pandoc-crossref for numbering (@fig:label).">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
                 </label>
+                <!-- Column 2 row 2 (MIDDLE) -->
                 <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
                   <input type="checkbox" id="lot" class="checkbox checkbox-primary checkbox-sm">
-                  <div>
+                  <div class="flex-1">
                     <span class="label-text font-medium text-sm">List of Tables</span>
                     <p class="text-xs text-base-content/60">Table index</p>
+                  </div>
+                  <div class="tooltip tooltip-right" data-tip="Requires tables with captions: Table: Caption text. Use pandoc-crossref for numbering (@tbl:label).">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                  </div>
+                </label>
+                <!-- Column 3 row 2 (RIGHT) -->
+                <label class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2">
+                  <input type="checkbox" id="darkMode" class="checkbox checkbox-primary checkbox-sm">
+                  <div class="flex-1">
+                    <span class="label-text font-medium text-sm">Dark Mode</span>
+                    <p class="text-xs text-base-content/60">Dark background</p>
+                  </div>
+                  <div class="tooltip tooltip-left" data-tip="Generates PDF/HTML/EPUB with dark background and light text. Good for screen reading.">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
                   </div>
                 </label>
                 <label id="standaloneLabel" class="label cursor-pointer justify-start gap-2 bg-base-200 rounded-lg px-3 py-2 hidden">
@@ -351,34 +378,89 @@
 
               <!-- Document Class & Top Level Division -->
               <div class="grid grid-cols-2 gap-3">
+                <!-- Column 1 (LEFT) -->
                 <div class="form-control">
                   <label class="label py-0.5">
                     <span class="label-text">Document Class</span>
-                    <div class="tooltip tooltip-left" data-tip="LaTeX document class type">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
-                    </div>
                   </label>
-                  <select id="documentClass" class="select select-bordered select-sm w-full">
-                    <option value="article">Article</option>
-                    <option value="report">Report</option>
-                    <option value="book">Book</option>
-                    <option value="memoir">Memoir</option>
-                    <option value="scrartcl">KOMA Article</option>
-                  </select>
+                  <div class="dropdown w-full">
+                    <div tabindex="0" role="button" class="btn btn-sm w-full justify-between font-normal">
+                      <span id="documentClassLabel">Report</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-50 w-full p-2 shadow-lg">
+                      <li><a class="doc-class-option flex justify-between items-center gap-2" data-value="article">
+                        <span>Article</span>
+                        <div class="tooltip tooltip-right" data-tip="No chapters. Use # for sections. Best for papers, essays, short reports. Supports TOC but not 'new page after TOC'.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="doc-class-option flex justify-between items-center gap-2" data-value="report">
+                        <span>Report</span>
+                        <div class="tooltip tooltip-right" data-tip="Has chapters. # = Chapter, ## = Section. Supports TOC with 'new page after'. Title page on separate page. Good for theses.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="doc-class-option flex justify-between items-center gap-2" data-value="book">
+                        <span>Book</span>
+                        <div class="tooltip tooltip-right" data-tip="Has chapters + parts. Two-sided (odd/even pages). Chapters start on odd pages. Full TOC/LoF/LoT support. Front/back matter.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="doc-class-option flex justify-between items-center gap-2" data-value="memoir">
+                        <span>Memoir</span>
+                        <div class="tooltip tooltip-right" data-tip="Flexible: works as article or book. All features available. Highly customizable. Can emulate any other class.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="doc-class-option flex justify-between items-center gap-2" data-value="scrartcl">
+                        <span>KOMA Article</span>
+                        <div class="tooltip tooltip-right" data-tip="European typography. No chapters (like article). Better default spacing. Part of KOMA-Script bundle.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                    </ul>
+                  </div>
+                  <input type="hidden" id="documentClass" value="report">
                 </div>
+                <!-- Column 2 (RIGHT) -->
                 <div class="form-control">
                   <label class="label py-0.5">
                     <span class="label-text">Top-Level Headings</span>
-                    <div class="tooltip tooltip-left" data-tip="How # headings are interpreted">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
-                    </div>
                   </label>
-                  <select id="topLevelDiv" class="select select-bordered select-sm w-full">
-                    <option value="default">Default</option>
-                    <option value="part">Parts</option>
-                    <option value="chapter">Chapters</option>
-                    <option value="section">Sections</option>
-                  </select>
+                  <div class="dropdown dropdown-end w-full">
+                    <div tabindex="0" role="button" class="btn btn-sm w-full justify-between font-normal">
+                      <span id="topLevelDivLabel">Default</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    <ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-50 w-full p-2 shadow-lg">
+                      <li><a class="top-level-option flex justify-between items-center gap-2" data-value="default">
+                        <span>Default</span>
+                        <div class="tooltip tooltip-left" data-tip="Auto: article/scrartcl → sections, book/report/memoir → chapters.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="top-level-option flex justify-between items-center gap-2" data-value="part">
+                        <span>Parts</span>
+                        <div class="tooltip tooltip-left" data-tip="# → Part (highest level). Use for very large documents. Parts contain chapters.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="top-level-option flex justify-between items-center gap-2" data-value="chapter">
+                        <span>Chapters</span>
+                        <div class="tooltip tooltip-left" data-tip="# → Chapter. Requires book/report/memoir class. Each chapter starts new page.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                      <li><a class="top-level-option flex justify-between items-center gap-2" data-value="section">
+                        <span>Sections</span>
+                        <div class="tooltip tooltip-left" data-tip="# → Section. No chapter breaks. Default for article class.">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 16v-4m0-4h.01"/></svg>
+                        </div>
+                      </a></li>
+                    </ul>
+                  </div>
+                  <input type="hidden" id="topLevelDiv" value="default">
                 </div>
               </div>
             </div>
@@ -451,13 +533,15 @@
                 </div>
               </div>
 
-              <!-- Page Numbers -->
+              <!-- Page Number Format -->
               <div class="grid grid-cols-3 gap-3">
+                <!-- Column 1 (LEFT) -->
                 <div class="form-control">
-                  <label class="label py-0.5"><span class="label-text">Page Format</span></label>
+                  <label class="label py-0.5"><span class="label-text">Page Number Format</span></label>
                   <select id="pageNumberFormat" class="select select-bordered select-sm w-full">
                     <option value="page">Page N</option>
-                    <option value="page-of">N of X</option>
+                    <option value="page-of-x">Page N of X</option>
+                    <option value="n-of-x">N of X</option>
                     <option value="number">N only</option>
                   </select>
                 </div>
@@ -665,9 +749,9 @@
 
   <!-- Dependency Check Modal -->
   <dialog id="depsModal" class="modal">
-    <div class="modal-box">
+    <div class="modal-box max-w-2xl">
       <h3 class="font-bold text-lg mb-4">Dependency Check</h3>
-      <div id="depsResults" class="space-y-2">
+      <div id="depsResults" class="space-y-2 max-h-96 overflow-y-auto">
         <div class="flex items-center justify-center py-4">
           <span class="loading loading-spinner loading-md"></span>
           <span class="ml-2">Checking dependencies...</span>
@@ -682,6 +766,22 @@
     <form method="dialog" class="modal-backdrop">
       <button>close</button>
     </form>
+  </dialog>
+
+  <!-- Progress modal for install/uninstall operations -->
+  <dialog id="progressModal" class="modal">
+    <div class="modal-box max-w-2xl">
+      <h3 id="progressTitle" class="font-bold text-lg mb-2">Installing...</h3>
+      <p id="progressCommand" class="text-xs font-mono text-base-content/60 mb-3 truncate"></p>
+      <div id="progressOutput" class="bg-base-300 rounded-lg p-3 font-mono text-xs h-48 overflow-y-auto whitespace-pre-wrap"></div>
+      <div class="modal-action">
+        <button id="progressCancelBtn" class="btn btn-warning">
+          <span class="loading loading-spinner loading-xs mr-1"></span>
+          Cancel
+        </button>
+        <button id="progressCloseBtn" class="btn hidden">Close</button>
+      </div>
+    </div>
   </dialog>
 
   <script src="/src/main.js" type="module"></script>

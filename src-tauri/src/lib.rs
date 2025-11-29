@@ -1,13 +1,15 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::env;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
+use std::io::{BufRead, BufReader};
+use tauri::{AppHandle, Emitter};
 
 // Track running install processes for cancellation
 static NEXT_INSTALL_ID: AtomicU32 = AtomicU32::new(1);
 lazy_static::lazy_static! {
-    static ref RUNNING_INSTALLS: Mutex<HashMap<u32, std::process::Child>> = Mutex::new(HashMap::new());
+    static ref RUNNING_INSTALLS: Mutex<HashMap<u32, Arc<AtomicBool>>> = Mutex::new(HashMap::new());
 }
 
 // Get extended PATH including common installation directories
@@ -123,107 +125,184 @@ fn open_file(path: String) -> Result<(), String> {
     open::that(&path).map_err(|e| format!("Failed to open file: {}", e))
 }
 
-// Start installation and return an ID for cancellation
+// Run a command with streaming output to the frontend
 #[tauri::command]
-async fn install_dependency(command: String) -> Result<String, String> {
+async fn run_command_with_output(app: AppHandle, command: String, operation: String) -> Result<String, String> {
     let extended_path = get_extended_path();
     let install_id = NEXT_INSTALL_ID.fetch_add(1, Ordering::SeqCst);
+    let cancelled = Arc::new(AtomicBool::new(false));
 
-    tokio::task::spawn_blocking(move || {
-        let child_result = if cfg!(target_os = "windows") {
+    // Store cancel flag
+    {
+        let mut installs = RUNNING_INSTALLS.lock().unwrap();
+        installs.insert(install_id, cancelled.clone());
+    }
+
+    // Emit start event
+    let _ = app.emit("command-output", serde_json::json!({
+        "type": "start",
+        "id": install_id,
+        "operation": operation,
+        "command": command
+    }));
+
+    let app_clone = app.clone();
+    let cancelled_clone = cancelled.clone();
+    let operation_clone = operation.clone();
+
+    let result = tokio::task::spawn_blocking(move || {
+        let mut child = if cfg!(target_os = "windows") {
             Command::new("cmd")
                 .args(["/C", &command])
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
         } else {
             Command::new("sh")
                 .args(["-c", &command])
                 .env("PATH", &extended_path)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
-        };
+        }.map_err(|e| format!("Failed to start: {}", e))?;
 
-        match child_result {
-            Ok(mut child) => {
-                // Store the child process for potential cancellation
-                {
-                    let mut installs = RUNNING_INSTALLS.lock().unwrap();
-                    installs.insert(install_id, child);
-                }
+        // Read stdout in a separate thread
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+        let app_stdout = app_clone.clone();
+        let app_stderr = app_clone.clone();
 
-                // Wait for completion (this will block until done or killed)
-                let child_ref = {
-                    let mut installs = RUNNING_INSTALLS.lock().unwrap();
-                    installs.remove(&install_id)
-                };
-
-                if let Some(mut child) = child_ref {
-                    match child.wait() {
-                        Ok(status) => {
-                            if status.success() {
-                                Ok("Installation completed successfully".to_string())
-                            } else {
-                                Err(format!("Installation failed with exit code: {:?}", status.code()))
-                            }
-                        }
-                        Err(e) => Err(format!("Failed to wait for process: {}", e)),
-                    }
-                } else {
-                    Err("Installation was cancelled".to_string())
+        let stdout_handle = std::thread::spawn(move || {
+            if let Some(stdout) = stdout {
+                let reader = BufReader::new(stdout);
+                for line in reader.lines().map_while(Result::ok) {
+                    let _ = app_stdout.emit("command-output", serde_json::json!({
+                        "type": "stdout",
+                        "line": line
+                    }));
                 }
             }
-            Err(e) => Err(format!("Failed to start installation: {}", e)),
+        });
+
+        let stderr_handle = std::thread::spawn(move || {
+            if let Some(stderr) = stderr {
+                let reader = BufReader::new(stderr);
+                for line in reader.lines().map_while(Result::ok) {
+                    let _ = app_stderr.emit("command-output", serde_json::json!({
+                        "type": "stderr",
+                        "line": line
+                    }));
+                }
+            }
+        });
+
+        // Wait for process
+        let status = child.wait().map_err(|e| format!("Wait failed: {}", e))?;
+
+        // Wait for output threads
+        let _ = stdout_handle.join();
+        let _ = stderr_handle.join();
+
+        // Check if cancelled
+        if cancelled_clone.load(Ordering::SeqCst) {
+            return Err("Operation cancelled".to_string());
+        }
+
+        if status.success() {
+            Ok(format!("{} completed successfully", operation_clone))
+        } else {
+            Err(format!("{} failed with exit code: {:?}", operation_clone, status.code()))
         }
     })
     .await
-    .map_err(|e| format!("Task failed: {}", e))?
+    .map_err(|e| format!("Task failed: {}", e))?;
+
+    // Clean up
+    {
+        let mut installs = RUNNING_INSTALLS.lock().unwrap();
+        installs.remove(&install_id);
+    }
+
+    // Emit end event
+    let _ = app.emit("command-output", serde_json::json!({
+        "type": "end",
+        "id": install_id,
+        "success": result.is_ok(),
+        "message": result.as_ref().map(|s| s.as_str()).unwrap_or_else(|e| e.as_str())
+    }));
+
+    result
 }
 
 #[tauri::command]
 fn cancel_all_installs() -> Result<String, String> {
-    let mut installs = RUNNING_INSTALLS.lock().map_err(|e| e.to_string())?;
+    let installs = RUNNING_INSTALLS.lock().map_err(|e| e.to_string())?;
     let count = installs.len();
 
-    for (_, mut child) in installs.drain() {
-        let _ = child.kill();
+    for (_, cancelled) in installs.iter() {
+        cancelled.store(true, Ordering::SeqCst);
     }
 
-    Ok(format!("Cancelled {} installation(s)", count))
+    Ok(format!("Cancelling {} operation(s)", count))
+}
+
+// Get the uninstall command for a dependency
+fn get_uninstall_command(name: &str) -> Option<&'static str> {
+    match name {
+        "tectonic" => Some("brew uninstall tectonic 2>&1 || cargo uninstall tectonic 2>&1"),
+        "texlive" => Some("brew uninstall --cask basictex 2>&1 || brew uninstall --cask mactex 2>&1"),
+        "mermaid-filter" => Some("npm uninstall -g mermaid-filter 2>&1"),
+        "pandoc-crossref" => Some("brew uninstall pandoc-crossref 2>&1"),
+        "pandoc" => Some("brew uninstall pandoc 2>&1"),
+        _ => None,
+    }
+}
+
+// Get the install command for a dependency
+fn get_install_command(name: &str, method: &str) -> Option<String> {
+    match (name, method) {
+        ("tectonic", "brew") => Some("brew install tectonic 2>&1".to_string()),
+        ("tectonic", "cargo") => Some("cargo install tectonic 2>&1".to_string()),
+        ("texlive", "brew") => Some("brew install --cask basictex 2>&1".to_string()),
+        ("texlive", "apt") => Some("sudo apt install texlive-latex-base texlive-fonts-recommended texlive-latex-extra 2>&1".to_string()),
+        ("mermaid-filter", "npm") => Some("npm install -g mermaid-filter 2>&1".to_string()),
+        ("pandoc-crossref", "brew") => Some("brew install pandoc-crossref 2>&1".to_string()),
+        ("pandoc", "brew") => Some("brew install pandoc 2>&1".to_string()),
+        _ => None,
+    }
 }
 
 #[tauri::command]
-fn uninstall_dependency(name: String) -> Result<String, String> {
-    let extended_path = get_extended_path();
+async fn install_dependency(app: AppHandle, name: String, method: String) -> Result<String, String> {
+    let command = get_install_command(&name, &method)
+        .ok_or_else(|| format!("Unknown install method {} for {}", method, name))?;
 
-    // Determine uninstall command based on package manager / dependency name
-    let uninstall_cmd = match name.as_str() {
-        "tectonic" => "brew uninstall tectonic || cargo uninstall tectonic",
-        "mermaid-filter" => "npm uninstall -g mermaid-filter",
-        "pandoc-crossref" => "brew uninstall pandoc-crossref",
-        "pandoc" => "brew uninstall pandoc",
-        _ => return Err(format!("Unknown dependency: {}", name)),
-    };
+    run_command_with_output(app, command, format!("Installing {}", name)).await
+}
 
-    let output = if cfg!(target_os = "windows") {
-        Command::new("cmd")
-            .args(["/C", uninstall_cmd])
-            .output()
-    } else {
-        Command::new("sh")
-            .args(["-c", uninstall_cmd])
-            .env("PATH", &extended_path)
-            .output()
-    };
+#[tauri::command]
+async fn uninstall_dependency(app: AppHandle, name: String) -> Result<String, String> {
+    let command = get_uninstall_command(&name)
+        .ok_or_else(|| format!("Unknown dependency: {}", name))?
+        .to_string();
 
-    match output {
-        Ok(output) => {
-            if output.status.success() {
-                Ok(format!("{} uninstalled successfully", name))
-            } else {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                Err(format!("Uninstall failed: {}", stderr))
-            }
-        }
-        Err(e) => Err(format!("Failed to execute uninstall: {}", e)),
-    }
+    run_command_with_output(app, command, format!("Uninstalling {}", name)).await
+}
+
+#[tauri::command]
+async fn reinstall_dependency(app: AppHandle, name: String, method: String) -> Result<String, String> {
+    // First uninstall
+    let uninstall_cmd = get_uninstall_command(&name)
+        .ok_or_else(|| format!("Unknown dependency: {}", name))?
+        .to_string();
+
+    let _ = run_command_with_output(app.clone(), uninstall_cmd, format!("Uninstalling {}", name)).await;
+
+    // Then install
+    let install_cmd = get_install_command(&name, &method)
+        .ok_or_else(|| format!("Unknown install method {} for {}", method, name))?;
+
+    run_command_with_output(app, install_cmd, format!("Reinstalling {}", name)).await
 }
 
 #[tauri::command]
@@ -317,7 +396,7 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists, install_dependency, cancel_all_installs, uninstall_dependency])
+        .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists, install_dependency, cancel_all_installs, uninstall_dependency, reinstall_dependency, run_command_with_output])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

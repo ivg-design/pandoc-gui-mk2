@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Features auto-disable when required dependencies are missing
   - Tooltips on disabled features explain what needs to be installed
   - PDF engine dropdown shows "(not installed)" for unavailable engines
+  - Auto-selects first available PDF engine on startup
   - Mermaid options disabled when mermaid-filter missing
   - pandoc-crossref checkbox disabled when filter missing
 - **Async Installation System**:
@@ -20,10 +21,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cancel button appears during installation to abort long-running installs
   - Progress spinner shows installation is in progress
   - Toast notifications for install start, success, and failure
+  - Uses native Tauri dialog for confirmation (not browser confirm)
 - **Uninstall Support**:
   - Uninstall button for each installed optional dependency
-  - Confirmation dialog before uninstalling
+  - Reinstall button for quick reinstallation
+  - Native confirmation dialog before uninstalling
   - Pandoc (required) cannot be uninstalled from the app
+- **TeX Live as Installable Dependency**:
+  - BasicTeX (~100MB) instead of full MacTeX (~4GB)
+  - Consolidated lualatex/xelatex/pdflatex into single "texlive" dependency
+  - Install via Homebrew (macOS) or apt (Linux)
+- **Dark Mode Output**:
+  - New "Dark Mode" checkbox in Document tab
+  - Generates PDF with dark background (#1e1e2e) and light text (#cdd6f4)
+  - HTML/EPUB: Injects dark CSS stylesheet
+  - Good for screen reading and eye strain reduction
 - **Colored Token Pills**:
   - Tokens now display as colored pills in input fields (not plain text)
   - Different colors for different token types (primary, secondary, accent, etc.)
@@ -31,8 +43,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Drag-and-drop works in Tauri app (fixed WebView interception)
 - **FAB Menu Redesign**:
   - Accordion-style submenus that expand inline
-  - Multiple submenus can be open simultaneously
+  - Only one submenu can be open at a time
   - Smooth animations for open/close
+- **Page Number Format Options**:
+  - "Page N" - Standard format
+  - "Page N of X" - Full format with total pages (NEW)
+  - "N of X" - Compact format with total pages
+  - "N only" - Just the number
+- **Document Class Tooltips**:
+  - Detailed tooltips for each document class explaining features and limitations
+  - Article: No chapters, TOC without new page option
+  - Report: Has chapters, full TOC support, separate title page
+  - Book: Two-sided, chapters on odd pages, front/back matter
+  - Memoir: Flexible, all features, highly customizable
+  - KOMA Article: European typography, better spacing
 - Extended PATH support for finding tools in:
   - Homebrew paths (`/usr/local/bin`, `/opt/homebrew/bin`)
   - nvm Node.js versions (`~/.nvm/versions/node/*/bin`)
@@ -42,17 +66,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Tauri Drag-Drop**: Set `dragDropEnabled: false` in Tauri config to allow JavaScript to handle drag-drop instead of native WebView interception
 - **mermaid-filter Detection**: Changed from `--version` flag (which errors) to `which mermaid-filter`
+- **Uninstall Confirmation**: Now uses native Tauri dialog that properly blocks until user responds
+- **Tooltip Positioning**: Left-side tooltips open right, right-side tooltips open left (prevents window clipping)
+- **PDF Engine Dropdown Layout**: Fixed layout shift when opening dropdown
 - FAB preset dropdown now shows multiple presets (taller, not wider)
 - Token drag/drop now works reliably on all input fields including headers/footers
 - Duplicate token insertion no longer corrupts existing pills
 - PATH issues with pandoc and other tools in Tauri environment
 
 ### Changed
+- **Default Document Class**: Changed from Article to Report (better for research/documentation)
+- **Page Format Label**: Renamed "Page Format" to "Page Number Format" for clarity
 - Tokens section now expanded by default in Content tab
 - Removed custom floating tooltip system in favor of DaisyUI tooltips
 - Header/footer fields converted from text inputs to contenteditable divs for rich token display
 - Install buttons now show spinner with "Cancel Install" option
 - Dependency checker refreshes after install/uninstall operations
+- FAB accordion only allows one section open at a time
 
 ## [2.0.0] - 2025-11-27
 

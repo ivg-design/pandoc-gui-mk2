@@ -52,10 +52,11 @@ A modern, cross-platform graphical user interface for [Pandoc](https://pandoc.or
   - `{page}` - Page number
 - **Visual Token Insertion**: Tokens appear as colored pills in input fields
 - **Custom Headers/Footers**: Left, center, right positions with token support
-- **Page Number Formats**: "Page N", "N of X", or just "N"
+- **Page Number Formats**: "Page N", "Page N of X", "N of X", or just "N"
 - **Page Number Styles**: Arabic (1, 2, 3), Roman (i, ii, iii), or uppercase Roman (I, II, III)
 
 ### Advanced Features
+- **Dark Mode Output**: Generate PDFs/HTML/EPUB with dark background for screen reading
 - **Mermaid Diagrams**: Auto-detection with SVG/PNG output options
 - **pandoc-crossref**: Cross-reference support (@fig:name, @eq:name)
 - **Citeproc**: Bibliography and citation support ([@key])
@@ -69,12 +70,13 @@ A modern, cross-platform graphical user interface for [Pandoc](https://pandoc.or
   - Automatic dependency detection on startup
   - Features automatically disabled when required tools are missing
   - One-click install buttons for Homebrew, apt, npm, and cargo
+  - BasicTeX installation (~100MB) instead of full MacTeX (~4GB)
   - Cancel button during long installations
-  - Uninstall buttons for optional dependencies
+  - Reinstall and Uninstall buttons for optional dependencies
   - Helpful tooltips explaining why features are disabled
-- **Tooltips**: Contextual help for all options
+- **Contextual Tooltips**: Left-side tooltips open right, right-side open left (no clipping)
 - **Tab-based Interface**: Organized into Layout, Fonts, Document, Content, Advanced, Command
-- **FAB Menu**: Accordion-style floating action button with nested submenus
+- **FAB Menu**: Accordion-style floating action button (one submenu at a time)
 
 ## Installation
 
