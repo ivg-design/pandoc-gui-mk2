@@ -1,0 +1,14 @@
+{
+  "theme": "default",
+  "flowchart": {
+    "htmlLabels": false,
+    "useMaxWidth": true
+  },
+  "sequence": {
+    "htmlLabels": false
+  },
+  "gantt": {
+    "useWidth": undefined
+  },
+  "securityLevel": "loose"
+}

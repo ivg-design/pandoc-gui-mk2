@@ -4,6 +4,8 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
+use std::fs;
+use std::path::Path;
 use tauri::{AppHandle, Emitter};
 use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
 
@@ -97,6 +99,31 @@ fn run_pandoc(command: String) -> Result<String, String> {
     let extended_path = get_extended_path();
     let home = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
     let temp_dir = env::temp_dir();
+
+    // Try to copy mermaid config file to home directory if it exists in the bundle
+    // This ensures mermaid-filter uses proper configuration for SVG rendering with text
+    let app_dir = env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|p| p.to_path_buf()));
+
+    if let Some(app_dir) = app_dir {
+        // Try multiple possible locations for the config file
+        let possible_paths = vec![
+            app_dir.join(".mermaid-config.json"),
+            app_dir.parent()
+                .and_then(|p| p.parent())
+                .map(|p| p.join(".mermaid-config.json"))
+                .unwrap_or_default(),
+        ];
+
+        for config_path in possible_paths {
+            if config_path.exists() {
+                let home_config = Path::new(&home).join(".mermaid-config.json");
+                let _ = fs::copy(&config_path, &home_config);
+                break;
+            }
+        }
+    }
 
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
