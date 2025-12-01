@@ -295,25 +295,84 @@ fn cancel_all_installs() -> Result<String, String> {
 }
 
 // Get the uninstall command for a dependency
-fn get_uninstall_command(name: &str) -> Option<&'static str> {
+// Uses osascript on macOS for commands requiring admin privileges (shows native password dialog)
+fn get_uninstall_command(name: &str) -> Option<String> {
     match name {
-        "tectonic" => Some("brew uninstall tectonic 2>&1 || cargo uninstall tectonic 2>&1"),
-        "texlive" => Some("brew uninstall --cask basictex 2>&1 || brew uninstall --cask mactex 2>&1"),
-        "mermaid-filter" => Some("npm uninstall -g mermaid-filter 2>&1"),
-        "pandoc-crossref" => Some("brew uninstall pandoc-crossref 2>&1"),
-        "pandoc" => Some("brew uninstall pandoc 2>&1"),
+        "tectonic" => Some("brew uninstall tectonic 2>&1 || cargo uninstall tectonic 2>&1".to_string()),
+        "texlive" => {
+            if cfg!(target_os = "macos") {
+                Some(r#"ASKPASS_SCRIPT=$(mktemp) && cat > "$ASKPASS_SCRIPT" << 'ASKPASSEOF'
+#!/bin/bash
+osascript -e 'display dialog "Pandoc GUI needs your password to uninstall BasicTeX:" default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK"' -e 'text returned of result' 2>/dev/null
+ASKPASSEOF
+chmod +x "$ASKPASS_SCRIPT" && SUDO_ASKPASS="$ASKPASS_SCRIPT" brew uninstall --cask basictex 2>&1 || brew uninstall --cask mactex 2>&1; EXIT_CODE=$?; rm -f "$ASKPASS_SCRIPT"; exit $EXIT_CODE"#.to_string())
+            } else {
+                Some("brew uninstall --cask basictex 2>&1 || brew uninstall --cask mactex 2>&1".to_string())
+            }
+        },
+        "mermaid-filter" => {
+            if cfg!(target_os = "macos") {
+                // Try without sudo first (works if npm prefix is user-writable), fall back to sudo with askpass
+                Some(r#"npm uninstall -g mermaid-filter 2>&1 || (ASKPASS_SCRIPT=$(mktemp) && cat > "$ASKPASS_SCRIPT" << 'ASKPASSEOF'
+#!/bin/bash
+osascript -e 'display dialog "Pandoc GUI needs your password to uninstall mermaid-filter:" default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK"' -e 'text returned of result' 2>/dev/null
+ASKPASSEOF
+chmod +x "$ASKPASS_SCRIPT" && SUDO_ASKPASS="$ASKPASS_SCRIPT" sudo -A npm uninstall -g mermaid-filter 2>&1; EXIT_CODE=$?; rm -f "$ASKPASS_SCRIPT"; exit $EXIT_CODE)"#.to_string())
+            } else if cfg!(target_os = "linux") {
+                Some("npm uninstall -g mermaid-filter 2>&1 || pkexec npm uninstall -g mermaid-filter 2>&1".to_string())
+            } else {
+                Some("npm uninstall -g mermaid-filter 2>&1".to_string())
+            }
+        },
+        "pandoc-crossref" => Some("brew uninstall pandoc-crossref 2>&1".to_string()),
+        "pandoc" => Some("brew uninstall pandoc 2>&1".to_string()),
         _ => None,
     }
 }
 
 // Get the install command for a dependency
+// Uses osascript on macOS for commands requiring admin privileges (shows native password dialog)
+// Uses pkexec on Linux for GUI sudo prompt
 fn get_install_command(name: &str, method: &str) -> Option<String> {
     match (name, method) {
         ("tectonic", "brew") => Some("brew install tectonic 2>&1".to_string()),
         ("tectonic", "cargo") => Some("cargo install tectonic 2>&1".to_string()),
-        ("texlive", "brew") => Some("brew install --cask basictex 2>&1".to_string()),
-        ("texlive", "apt") => Some("sudo apt install texlive-latex-base texlive-fonts-recommended texlive-latex-extra 2>&1".to_string()),
-        ("mermaid-filter", "npm") => Some("npm install -g mermaid-filter 2>&1".to_string()),
+        ("texlive", "brew") => {
+            if cfg!(target_os = "macos") {
+                // brew cask installs need sudo for the pkg installer
+                // Use SUDO_ASKPASS with osascript to show native password dialog
+                // Homebrew can't run as root, so we provide an askpass helper instead
+                Some(r#"ASKPASS_SCRIPT=$(mktemp) && cat > "$ASKPASS_SCRIPT" << 'ASKPASSEOF'
+#!/bin/bash
+osascript -e 'display dialog "Pandoc GUI needs your password to install BasicTeX:" default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK"' -e 'text returned of result' 2>/dev/null
+ASKPASSEOF
+chmod +x "$ASKPASS_SCRIPT" && SUDO_ASKPASS="$ASKPASS_SCRIPT" brew install --cask basictex 2>&1; EXIT_CODE=$?; rm -f "$ASKPASS_SCRIPT"; exit $EXIT_CODE"#.to_string())
+            } else {
+                Some("brew install --cask basictex 2>&1".to_string())
+            }
+        },
+        ("texlive", "apt") => {
+            if cfg!(target_os = "linux") {
+                // Use pkexec for GUI password prompt on Linux
+                Some("pkexec apt install -y texlive-latex-base texlive-fonts-recommended texlive-latex-extra 2>&1".to_string())
+            } else {
+                Some("sudo apt install texlive-latex-base texlive-fonts-recommended texlive-latex-extra 2>&1".to_string())
+            }
+        },
+        ("mermaid-filter", "npm") => {
+            if cfg!(target_os = "macos") {
+                // Try without sudo first (works if npm prefix is user-writable), fall back to sudo with askpass
+                Some(r#"npm install -g mermaid-filter 2>&1 || (ASKPASS_SCRIPT=$(mktemp) && cat > "$ASKPASS_SCRIPT" << 'ASKPASSEOF'
+#!/bin/bash
+osascript -e 'display dialog "Pandoc GUI needs your password to install mermaid-filter:" default answer "" with hidden answer buttons {"Cancel","OK"} default button "OK"' -e 'text returned of result' 2>/dev/null
+ASKPASSEOF
+chmod +x "$ASKPASS_SCRIPT" && SUDO_ASKPASS="$ASKPASS_SCRIPT" sudo -A npm install -g mermaid-filter 2>&1; EXIT_CODE=$?; rm -f "$ASKPASS_SCRIPT"; exit $EXIT_CODE)"#.to_string())
+            } else if cfg!(target_os = "linux") {
+                Some("npm install -g mermaid-filter 2>&1 || pkexec npm install -g mermaid-filter 2>&1".to_string())
+            } else {
+                Some("npm install -g mermaid-filter 2>&1".to_string())
+            }
+        },
         ("pandoc-crossref", "brew") => Some("brew install pandoc-crossref 2>&1".to_string()),
         ("pandoc", "brew") => Some("brew install pandoc 2>&1".to_string()),
         _ => None,
@@ -331,8 +390,7 @@ async fn install_dependency(app: AppHandle, name: String, method: String) -> Res
 #[tauri::command]
 async fn uninstall_dependency(app: AppHandle, name: String) -> Result<String, String> {
     let command = get_uninstall_command(&name)
-        .ok_or_else(|| format!("Unknown dependency: {}", name))?
-        .to_string();
+        .ok_or_else(|| format!("Unknown dependency: {}", name))?;
 
     run_command_with_output(app, command, format!("Uninstalling {}", name)).await
 }
@@ -341,8 +399,7 @@ async fn uninstall_dependency(app: AppHandle, name: String) -> Result<String, St
 async fn reinstall_dependency(app: AppHandle, name: String, method: String) -> Result<String, String> {
     // First uninstall
     let uninstall_cmd = get_uninstall_command(&name)
-        .ok_or_else(|| format!("Unknown dependency: {}", name))?
-        .to_string();
+        .ok_or_else(|| format!("Unknown dependency: {}", name))?;
 
     let _ = run_command_with_output(app.clone(), uninstall_cmd, format!("Uninstalling {}", name)).await;
 

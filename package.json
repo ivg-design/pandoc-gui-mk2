@@ -1,6 +1,6 @@
 {
   "name": "pandoc-gui-mk2",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Modern GUI for Pandoc document converter",
   "type": "module",
   "scripts": {
