@@ -7,9 +7,11 @@
   <link rel="stylesheet" href="/src/style.css">
   <link rel="icon" href="/icon.png" type="image/png">
 </head>
-<body class="min-h-screen bg-base-100 text-base-content text-sm">
+<body class="h-screen grid grid-rows-[1fr_auto] bg-base-100 text-base-content text-sm overflow-hidden">
 
-  <div class="p-3 space-y-3 max-w-5xl mx-auto">
+  <!-- Scrollable Content Area -->
+  <div class="overflow-y-auto">
+    <div class="p-3 pb-0 space-y-3 max-w-5xl mx-auto">
 
     <!-- File I/O + PDF Engine Section -->
     <div class="card bg-base-200">
@@ -629,9 +631,14 @@
       </div>
     </div>
 
-    <!-- Convert Section -->
-    <div class="card bg-base-200">
-      <div class="card-body p-3">
+    </div>
+  </div>
+
+  <!-- Fixed Bottom Bar -->
+  <div class="flex-shrink-0 border-t border-base-300 bg-base-100 p-3">
+    <div class="max-w-5xl mx-auto">
+      <div class="card bg-base-200">
+        <div class="card-body p-3">
         <div class="flex items-center gap-3">
           <button id="convertBtn" class="btn btn-primary flex-1 gap-2" disabled>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -715,7 +722,7 @@
         </div>
       </div>
     </div>
-
+    </div>
   </div>
 
   <!-- Toast Container -->
@@ -788,7 +795,14 @@
         <img src="/icon.png" alt="Pandoc GUI" class="w-8 h-8">
         Pandoc GUI
       </h3>
-      <p class="text-sm text-base-content/70 mb-4">Version 2.0.1</p>
+      <p class="text-sm text-base-content/70 mb-4">Version <span id="appVersion">2.0.2</span></p>
+
+      <button id="checkUpdateBtn" class="btn btn-sm btn-outline btn-primary mb-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Check for Updates
+      </button>
 
       <div class="divider my-2"></div>
 
@@ -859,6 +873,64 @@
       <div class="modal-action">
         <form method="dialog">
           <button class="btn">Close</button>
+        </form>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+      <button>close</button>
+    </form>
+  </dialog>
+
+  <!-- Update Available Modal -->
+  <dialog id="updateModal" class="modal">
+    <div class="modal-box max-w-md">
+      <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <span id="updateTitle">Update Available</span>
+      </h3>
+
+      <!-- Update info section (shown before download) -->
+      <div id="updateInfo">
+        <p class="text-sm mb-2">A new version of Pandoc GUI is available!</p>
+        <div class="flex justify-between text-sm text-base-content/70 mb-4">
+          <span>Current: <span id="currentVersion">-</span></span>
+          <span>Latest: <span id="latestVersion" class="text-primary font-medium">-</span></span>
+        </div>
+
+        <div class="collapse collapse-arrow bg-base-200 mb-4">
+          <input type="checkbox" id="releaseNotesToggle">
+          <div class="collapse-title text-sm font-medium">Release Notes</div>
+          <div class="collapse-content text-xs" id="updateReleaseNotes">
+            <p class="text-base-content/70">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download progress section (shown during download) -->
+      <div id="downloadProgress" class="hidden">
+        <p class="text-sm mb-2">Downloading update...</p>
+        <progress id="downloadProgressBar" class="progress progress-primary w-full mb-2" value="0" max="100"></progress>
+        <p class="text-xs text-base-content/70 text-right"><span id="downloadPercent">0</span>%</p>
+      </div>
+
+      <!-- Download complete section -->
+      <div id="downloadComplete" class="hidden">
+        <div class="alert alert-success mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span class="text-sm">Download complete!</span>
+        </div>
+        <p class="text-xs text-base-content/70 mb-2">Saved to: <span id="downloadPath" class="font-mono">~/Downloads</span></p>
+      </div>
+
+      <div class="modal-action">
+        <button id="updateDownloadBtn" class="btn btn-primary">Download Update</button>
+        <button id="showInFinderBtn" class="btn btn-primary hidden">Show in Finder</button>
+        <form method="dialog">
+          <button class="btn" id="updateCloseBtn">Close</button>
         </form>
       </div>
     </div>

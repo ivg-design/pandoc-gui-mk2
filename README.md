@@ -74,6 +74,7 @@ A modern, cross-platform graphical user interface for [Pandoc](https://pandoc.or
   - Cancel button during long installations
   - Reinstall and Uninstall buttons for optional dependencies
   - Helpful tooltips explaining why features are disabled
+- **Automatic Update Checker**: Check for new versions from About modal with direct download to ~/Downloads and "Show in Finder"
 - **Contextual Tooltips**: Left-side tooltips open right, right-side open left (no clipping)
 - **Tab-based Interface**: Organized into Layout, Fonts, Document, Content, Advanced, Command
 - **FAB Menu**: Accordion-style floating action button (one submenu at a time)

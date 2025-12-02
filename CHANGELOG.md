@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2025-12-02
+
 ### Added
+- **Automatic Update Checker**:
+  - Check for updates from About modal or automatically on app startup
+  - View release notes with collapsible details
+  - Direct download to ~/Downloads folder with progress bar
+  - "Show in Finder" button to reveal downloaded DMG
+  - Graceful handling when no releases are published yet
 - **Smart Dependency Management**:
   - Automatic dependency detection on app startup (silent check)
   - Features auto-disable when required dependencies are missing
@@ -93,6 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Install buttons now show spinner with "Cancel Install" option
 - Dependency checker refreshes after install/uninstall operations
 - FAB accordion only allows one section open at a time
+- **Fixed Bottom Bar**: Convert button and FAB now stay fixed at bottom of window using CSS Grid layout
+- **UI Text Selection**: Disabled click+drag text selection on UI chrome while preserving selection in input fields
 
 ## [2.0.0] - 2025-11-27
 
@@ -164,9 +174,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 2.1.0 | 2025-12-02 | Update checker, fixed bottom bar, UI text selection |
 | 2.0.0 | 2025-11-27 | Major UI redesign, tabs, presets, tokens, themes |
 | 1.0.0 | 2025-11-27 | Initial release |
 
-[Unreleased]: https://github.com/ivg/pandoc-gui-mk2/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/ivg/pandoc-gui-mk2/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/ivg/pandoc-gui-mk2/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/ivg/pandoc-gui-mk2/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/ivg/pandoc-gui-mk2/releases/tag/v1.0.0

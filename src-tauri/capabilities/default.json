@@ -11,6 +11,14 @@
     "dialog:default",
     "fs:allow-read-text-file",
     "fs:allow-write-text-file",
-    "fs:default"
+    "fs:default",
+    "http:default",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        { "url": "https://api.github.com/**" },
+        { "url": "https://github.com/**" }
+      ]
+    }
   ]
 }

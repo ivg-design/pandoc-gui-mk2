@@ -1947,6 +1947,292 @@ function setupFabMenu2() {
   });
 }
 
+// ========== UPDATE CHECKER ==========
+
+const GITHUB_REPO = 'ivg/pandoc-gui-mk2';
+let currentAppVersion = '2.0.2'; // Fallback, will be updated from Rust
+let latestReleaseInfo = null;
+let downloadedFilePath = null;
+
+// Compare semantic versions (returns 1 if a > b, -1 if a < b, 0 if equal)
+function compareVersions(a, b) {
+  const partsA = a.replace(/^v/, '').split('.').map(Number);
+  const partsB = b.replace(/^v/, '').split('.').map(Number);
+
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const numA = partsA[i] || 0;
+    const numB = partsB[i] || 0;
+    if (numA > numB) return 1;
+    if (numA < numB) return -1;
+  }
+  return 0;
+}
+
+// Check for updates from GitHub releases
+async function checkForUpdates(silent = false) {
+  try {
+    // Get current version from Rust if in Tauri mode
+    if (isTauri) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      try {
+        currentAppVersion = await invoke('get_app_version');
+        // Update version display in About modal
+        const versionSpan = $('appVersion');
+        if (versionSpan) versionSpan.textContent = currentAppVersion;
+      } catch (e) {
+        console.warn('Could not get app version from Rust:', e);
+      }
+    }
+
+    // Fetch latest release from GitHub API
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+    console.log('Checking for updates at:', url);
+
+    let release;
+    if (isTauri) {
+      try {
+        const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+        console.log('Using Tauri HTTP plugin');
+        const response = await tauriFetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'Pandoc-GUI-Update-Checker'
+          }
+        });
+        console.log('Response status:', response.status);
+        if (response.status === 404) {
+          // No releases published yet
+          if (!silent) {
+            showToast('No releases found. You are running the latest development version.', 'info');
+          }
+          return false;
+        }
+        if (!response.ok) {
+          throw new Error(`GitHub API returned ${response.status}`);
+        }
+        release = await response.json();
+      } catch (httpError) {
+        console.error('Tauri HTTP error:', httpError);
+        // Fallback to native fetch if Tauri HTTP fails
+        console.log('Falling back to native fetch');
+        const response = await fetch(url);
+        if (response.status === 404) {
+          if (!silent) {
+            showToast('No releases found. You are running the latest development version.', 'info');
+          }
+          return false;
+        }
+        if (!response.ok) {
+          throw new Error(`GitHub API returned ${response.status}`);
+        }
+        release = await response.json();
+      }
+    } else {
+      // Web mode
+      const response = await fetch(url);
+      if (response.status === 404) {
+        if (!silent) {
+          showToast('No releases found. You are running the latest development version.', 'info');
+        }
+        return false;
+      }
+      if (!response.ok) {
+        throw new Error(`GitHub API returned ${response.status}`);
+      }
+      release = await response.json();
+    }
+
+    console.log('Latest release:', release.tag_name);
+    const latestVersion = release.tag_name.replace(/^v/, '');
+
+    if (compareVersions(latestVersion, currentAppVersion) > 0) {
+      // Update available
+      latestReleaseInfo = release;
+      showUpdateModal(release);
+      return true;
+    } else {
+      // Already up to date
+      if (!silent) {
+        showToast('You are running the latest version!', 'success');
+      }
+      return false;
+    }
+  } catch (e) {
+    console.error('Failed to check for updates:', e);
+    if (!silent) {
+      showToast(`Update check failed: ${e.message}`, 'error');
+    }
+    return false;
+  }
+}
+
+// Show the update modal with release info
+function showUpdateModal(release) {
+  const modal = $('updateModal');
+  if (!modal) return;
+
+  // Reset modal state
+  $('updateInfo').classList.remove('hidden');
+  $('downloadProgress').classList.add('hidden');
+  $('downloadComplete').classList.add('hidden');
+  $('updateDownloadBtn').classList.remove('hidden');
+  $('showInFinderBtn').classList.add('hidden');
+  $('updateTitle').textContent = 'Update Available';
+  downloadedFilePath = null;
+
+  // Fill in version info
+  $('currentVersion').textContent = currentAppVersion;
+  $('latestVersion').textContent = release.tag_name.replace(/^v/, '');
+
+  // Parse and display release notes (markdown body)
+  const notesContainer = $('updateReleaseNotes');
+  if (release.body) {
+    // Simple markdown to HTML conversion for common elements
+    let notes = release.body
+      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+      .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+    notesContainer.innerHTML = `<p>${notes}</p>`;
+  } else {
+    notesContainer.innerHTML = '<p class="text-base-content/70">No release notes available.</p>';
+  }
+
+  modal.showModal();
+}
+
+// Get the appropriate DMG asset for this platform
+function getDownloadAsset(release) {
+  const assets = release.assets || [];
+
+  // Detect architecture
+  // On macOS, we can check navigator.userAgent for hints, but
+  // for now we'll look for both and prefer universal/aarch64
+  const dmgAssets = assets.filter(a => a.name.endsWith('.dmg'));
+
+  if (dmgAssets.length === 0) {
+    return null;
+  }
+
+  // Prefer universal, then aarch64 (M1/M2), then x64
+  const universal = dmgAssets.find(a => a.name.includes('universal'));
+  if (universal) return universal;
+
+  const arm = dmgAssets.find(a => a.name.includes('aarch64') || a.name.includes('arm64'));
+  if (arm) return arm;
+
+  const x64 = dmgAssets.find(a => a.name.includes('x64') || a.name.includes('x86_64'));
+  if (x64) return x64;
+
+  // Fallback to first DMG
+  return dmgAssets[0];
+}
+
+// Download the update with progress
+async function downloadUpdate() {
+  if (!latestReleaseInfo || !isTauri) return;
+
+  const asset = getDownloadAsset(latestReleaseInfo);
+  if (!asset) {
+    showToast('No compatible download found for your platform.', 'error');
+    return;
+  }
+
+  const { invoke } = await import('@tauri-apps/api/core');
+  const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+
+  // Switch to progress view
+  $('updateInfo').classList.add('hidden');
+  $('downloadProgress').classList.remove('hidden');
+  $('updateDownloadBtn').classList.add('hidden');
+  $('updateTitle').textContent = 'Downloading Update...';
+
+  const progressBar = $('downloadProgressBar');
+  const percentText = $('downloadPercent');
+
+  try {
+    // Get downloads directory
+    const downloadsPath = await invoke('get_downloads_path');
+    const filePath = `${downloadsPath}/${asset.name}`;
+
+    // Download with progress using Tauri HTTP plugin
+    const response = await tauriFetch(asset.browser_download_url, {
+      method: 'GET',
+      responseType: 3, // Binary/ArrayBuffer
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status}`);
+    }
+
+    // Get total size for progress
+    const contentLength = parseInt(response.headers.get('content-length') || '0', 10);
+    const data = await response.arrayBuffer();
+
+    // Update progress to 100%
+    progressBar.value = 100;
+    percentText.textContent = '100';
+
+    // Write to file using Tauri FS
+    const { writeFile } = await import('@tauri-apps/plugin-fs');
+    await writeFile(filePath, new Uint8Array(data));
+
+    downloadedFilePath = filePath;
+
+    // Show completion
+    $('downloadProgress').classList.add('hidden');
+    $('downloadComplete').classList.remove('hidden');
+    $('showInFinderBtn').classList.remove('hidden');
+    $('downloadPath').textContent = filePath;
+    $('updateTitle').textContent = 'Download Complete';
+
+    showToast('Update downloaded successfully!', 'success');
+  } catch (e) {
+    console.error('Download failed:', e);
+    showToast(`Download failed: ${e.message}`, 'error');
+
+    // Reset modal state
+    $('downloadProgress').classList.add('hidden');
+    $('updateInfo').classList.remove('hidden');
+    $('updateDownloadBtn').classList.remove('hidden');
+    $('updateTitle').textContent = 'Update Available';
+  }
+}
+
+// Show downloaded file in Finder/Explorer
+async function showInFinder() {
+  if (!downloadedFilePath || !isTauri) return;
+
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('reveal_in_finder', { path: downloadedFilePath });
+  } catch (e) {
+    console.error('Failed to reveal in finder:', e);
+    showToast('Failed to open file location', 'error');
+  }
+}
+
+// Setup update checker button handlers
+function setupUpdateChecker() {
+  const checkBtn = $('checkUpdateBtn');
+  const downloadBtn = $('updateDownloadBtn');
+  const finderBtn = $('showInFinderBtn');
+
+  if (checkBtn) {
+    checkBtn.addEventListener('click', () => checkForUpdates(false));
+  }
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', downloadUpdate);
+  }
+
+  if (finderBtn) {
+    finderBtn.addEventListener('click', showInFinder);
+  }
+}
+
 // Initialize everything
 async function init() {
   // Detect Tauri first
@@ -1966,6 +2252,7 @@ async function init() {
   setupFabMenu();
   setupPdfEngineDropdown();
   setupFabMenu2();
+  setupUpdateChecker();
 
   // Listen for menu About event from Tauri
   if (isTauri) {
@@ -1977,6 +2264,11 @@ async function init() {
 
   // Check dependencies silently to enable/disable features
   checkDependenciesSilent();
+
+  // Check for updates silently on startup (don't block or show error)
+  if (isTauri) {
+    setTimeout(() => checkForUpdates(true), 2000);
+  }
 
   // Initial format change to set up visibility
   handleFormatChange();

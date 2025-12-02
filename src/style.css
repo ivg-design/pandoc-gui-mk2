@@ -1,6 +1,37 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* Disable text selection on UI chrome */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable selection for input fields and text content */
+input,
+textarea,
+select,
+[contenteditable="true"],
+.token-field,
+code,
+pre,
+.font-mono,
+#commandPreview,
+#progressOutput {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Also allow selection in modals with text content */
+.modal-box p,
+.modal-box .text-xs,
+.modal-box code,
+.collapse-content,
+#updateReleaseNotes {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 /* Custom dim theme */
 @plugin "daisyui/theme" {
   name: "dim";
