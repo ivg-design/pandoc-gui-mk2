@@ -756,6 +756,11 @@ function buildPandocCommand() {
     args.push(`-V documentclass=${$('documentClass').value}`);
     args.push(`-V papersize=${$('paperSize').value}`);
 
+    // Load underscore package early to handle underscores in text mode (common in technical docs)
+    // Must be loaded before hyperref to work correctly in links and references
+    // The [strings] option enables underscores in \url and file paths
+    args.push('-V header-includes="\\usepackage[strings]{underscore}"');
+
     if ($('orientation').value === 'landscape') {
       args.push('-V geometry:landscape');
     }
@@ -845,6 +850,7 @@ function buildPandocCommand() {
     // Always add fancyhdr for page numbering control
     args.push('-V header-includes="\\usepackage{fancyhdr}"');
     args.push('-V header-includes="\\usepackage{lastpage}"');
+    // underscore package already loaded early (see above) - do not duplicate
     args.push('-V header-includes="\\pagestyle{fancy}"');
     args.push('-V header-includes="\\fancyhf{}"');
 

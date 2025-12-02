@@ -8,6 +8,7 @@ use std::fs;
 use std::path::Path;
 use tauri::{AppHandle, Emitter};
 use tauri::menu::{Menu, MenuItem, Submenu, PredefinedMenuItem};
+use log::{info, error};
 
 // Track running install processes for cancellation
 static NEXT_INSTALL_ID: AtomicU32 = AtomicU32::new(1);
@@ -96,6 +97,7 @@ fn check_command(command: String) -> Result<String, String> {
 
 #[tauri::command]
 fn run_pandoc(command: String) -> Result<String, String> {
+    info!("Running pandoc command: {}", command);
     let extended_path = get_extended_path();
     let home = env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
     let temp_dir = env::temp_dir();
@@ -157,14 +159,19 @@ fn run_pandoc(command: String) -> Result<String, String> {
     match output {
         Ok(output) => {
             if output.status.success() {
+                info!("Pandoc command completed successfully");
                 Ok(String::from_utf8_lossy(&output.stdout).to_string())
             } else {
                 let stderr = String::from_utf8_lossy(&output.stderr);
                 let stdout = String::from_utf8_lossy(&output.stdout);
+                error!("Pandoc command failed: {}\n{}", stderr, stdout);
                 Err(format!("{}\n{}", stderr, stdout))
             }
         }
-        Err(e) => Err(format!("Failed to execute pandoc: {}", e)),
+        Err(e) => {
+            error!("Failed to execute pandoc: {}", e);
+            Err(format!("Failed to execute pandoc: {}", e))
+        }
     }
 }
 
@@ -381,16 +388,20 @@ chmod +x "$ASKPASS_SCRIPT" && SUDO_ASKPASS="$ASKPASS_SCRIPT" sudo -A npm install
 
 #[tauri::command]
 async fn install_dependency(app: AppHandle, name: String, method: String) -> Result<String, String> {
+    info!("Installing dependency: {} via {}", name, method);
     let command = get_install_command(&name, &method)
         .ok_or_else(|| format!("Unknown install method {} for {}", method, name))?;
+    info!("Install command: {}", command);
 
     run_command_with_output(app, command, format!("Installing {}", name)).await
 }
 
 #[tauri::command]
 async fn uninstall_dependency(app: AppHandle, name: String) -> Result<String, String> {
+    info!("Uninstalling dependency: {}", name);
     let command = get_uninstall_command(&name)
         .ok_or_else(|| format!("Unknown dependency: {}", name))?;
+    info!("Uninstall command: {}", command);
 
     run_command_with_output(app, command, format!("Uninstalling {}", name)).await
 }
@@ -584,13 +595,16 @@ pub fn run() {
                 }
             });
 
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Enable logging for both debug and release builds
+            // Logs go to ~/Library/Logs/Pandoc GUI/ on macOS
+            app.handle().plugin(
+                tauri_plugin_log::Builder::default()
+                    .level(log::LevelFilter::Info)
+                    .target(tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::LogDir { file_name: Some("pandoc-gui.log".into()) }
+                    ))
+                    .build(),
+            )?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![run_pandoc, open_file, check_command, list_system_fonts, file_exists, write_dark_mode_header, write_unicode_header, install_dependency, cancel_all_installs, uninstall_dependency, reinstall_dependency, run_command_with_output])
